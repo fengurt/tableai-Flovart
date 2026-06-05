@@ -85,14 +85,14 @@ const BoardMenu: React.FC<{
     onDuplicate: () => void;
     onDelete: () => void;
 }> = ({ onRename, onDuplicate, onDelete }) => (
-    <div className="absolute right-0 top-full z-20 mt-2 w-32 rounded-2xl border border-neutral-200 bg-white p-1 shadow-xl">
-        <button type="button" onClick={onRename} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-neutral-700 transition hover:bg-neutral-100">
+    <div className="absolute right-0 top-full z-20 mt-2 w-32 border border-neutral-200 bg-white p-1">
+        <button type="button" onClick={onRename} className="block w-full px-3 py-2 text-left text-sm text-neutral-700 transition hover:bg-neutral-100">
             Rename
         </button>
-        <button type="button" onClick={onDuplicate} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-neutral-700 transition hover:bg-neutral-100">
+        <button type="button" onClick={onDuplicate} className="block w-full px-3 py-2 text-left text-sm text-neutral-700 transition hover:bg-neutral-100">
             Duplicate
         </button>
-        <button type="button" onClick={onDelete} className="block w-full rounded-xl px-3 py-2 text-left text-sm text-rose-600 transition hover:bg-rose-50">
+        <button type="button" onClick={onDelete} className="block w-full px-3 py-2 text-left text-sm text-rose-600 transition hover:bg-rose-50">
             Delete
         </button>
     </div>
@@ -158,11 +158,11 @@ const BoardRow: React.FC<{
                     onClick();
                 }
             }}
-            className={`group flex w-full cursor-pointer items-center gap-3 rounded-2xl px-3 py-2 text-left transition ${
+            className={`group flex w-full cursor-pointer items-center gap-3 border px-3 py-2 text-left transition ${
                 isActive ? 'bg-neutral-900 text-white' : 'bg-neutral-50 text-neutral-800 hover:bg-neutral-100'
             }`}
         >
-            <img src={thumbnail} alt={board.name} className="h-12 w-16 rounded-xl border border-white/20 object-cover" />
+            <img src={thumbnail} alt={board.name} className="h-12 w-16 border border-white/20 object-cover" />
             <div className="min-w-0 flex-1">
                 {isEditing ? (
                     <input
@@ -198,7 +198,7 @@ const BoardRow: React.FC<{
                     }}
                     title="画板操作"
                     aria-label="画板操作"
-                    className={`rounded-xl p-2 transition ${
+                    className={`p-2 transition ${
                         isActive ? 'hover:bg-white/10' : 'hover:bg-white'
                     } ${menuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 >
@@ -290,8 +290,8 @@ const LayerRow: React.FC<{
             {...dragProps}
             onClick={onSelect}
             onDoubleClick={() => setIsEditing(true)}
-            className={`group flex items-center gap-2 rounded-2xl px-3 py-2 text-left text-sm transition ${
-                isSelected ? 'bg-[#EEF4FF] text-[#175CD3]' : 'text-neutral-700 hover:bg-neutral-100'
+            className={`group flex items-center gap-2 border border-transparent px-3 py-2 text-left text-sm transition ${
+                isSelected ? 'border-[var(--accent-text)] bg-[var(--accent-bg)] text-[var(--accent-text)]' : 'text-neutral-700 hover:bg-neutral-100'
             } ${element.isVisible === false ? 'opacity-55' : ''}`}
             style={{ paddingLeft: `${12 + level * 18}px` }}
         >
@@ -303,7 +303,7 @@ const LayerRow: React.FC<{
                     event.stopPropagation();
                     if (hasChildren) onToggleExpanded();
                 }}
-                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition ${
+                className={`flex h-6 w-6 shrink-0 items-center justify-center transition ${
                     hasChildren ? 'text-neutral-500 hover:bg-white hover:text-neutral-800' : 'text-neutral-300'
                 }`}
             >
@@ -312,10 +312,10 @@ const LayerRow: React.FC<{
                         <path d="m9 6-4 4-4-4" />
                     </svg>
                 ) : (
-                    <span className="h-1.5 w-1.5 rounded-full bg-current opacity-40" />
+                    <span className="h-1.5 w-1.5 bg-current opacity-40" />
                 )}
             </button>
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white text-neutral-500 shadow-sm">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-[var(--border-color)] bg-white text-neutral-500">
                 {getElementIcon(element)}
             </span>
             <div className="min-w-0 flex-1">
@@ -342,7 +342,7 @@ const LayerRow: React.FC<{
                 )}
             </div>
             {hasChildren && (
-                <span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
+                <span className="border border-[var(--border-color)] bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-500">
                     {isExpanded ? 'open' : 'group'}
                 </span>
             )}
@@ -353,7 +353,7 @@ const LayerRow: React.FC<{
                         event.stopPropagation();
                         onToggleLock();
                     }}
-                    className={`rounded-lg p-1.5 transition ${element.isLocked ? 'text-neutral-900' : 'text-neutral-400 hover:bg-white hover:text-neutral-700'}`}
+                    className={`p-1.5 transition ${element.isLocked ? 'text-neutral-900' : 'text-neutral-400 hover:bg-white hover:text-neutral-700'}`}
                 >
                     {element.isLocked ? (
                         <svg {...iconProps}><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
@@ -367,7 +367,7 @@ const LayerRow: React.FC<{
                         event.stopPropagation();
                         onToggleVisibility();
                     }}
-                    className="rounded-lg p-1.5 text-neutral-400 transition hover:bg-white hover:text-neutral-700"
+                    className="p-1.5 text-neutral-400 transition hover:bg-white hover:text-neutral-700"
                 >
                     {element.isVisible === false ? (
                         <svg {...iconProps}><path d="M3 3 21 21" /><path d="M10.6 10.6a3 3 0 0 0 4.2 4.2" /><path d="M9.4 5.5A11.1 11.1 0 0 1 12 5c7 0 10 7 10 7a17.7 17.7 0 0 1-4 4.9" /><path d="M6.2 6.2A18.7 18.7 0 0 0 2 12s3 7 10 7a10.7 10.7 0 0 0 3.3-.5" /></svg>
@@ -453,7 +453,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                             onDragOver={handleDragOver}
                             onDragLeave={handleDragLeave}
                             onDrop={(event) => handleDrop(event, item.id)}
-                            className={dragOverId === item.id ? 'rounded-2xl bg-[#EEF4FF]' : ''}
+                            className={dragOverId === item.id ? 'bg-[var(--accent-bg)]' : ''}
                         >
                             <LayerRow
                                 element={item}
@@ -486,7 +486,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
 
     return (
         <div
-            className="compact-sidebar-panel theme-aware fixed z-[45] overflow-hidden rounded-[26px] border border-neutral-200 bg-white shadow-[0_24px_56px_rgba(15,23,42,0.14)] transition-all duration-300"
+            className="compact-sidebar-panel theme-aware fixed z-[45] overflow-hidden border border-neutral-200 bg-white transition-all duration-300"
             style={{
                 top: `${outerGap}px`,
                 bottom: `${outerGap}px`,
@@ -506,7 +506,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                     <button
                         type="button"
                         onClick={onToggle}
-                        className="rounded-2xl p-2 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
+                        className="p-2 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
                         title="Toggle sidebar"
                     >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -525,7 +525,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                         <button
                             type="button"
                             onClick={onAddBoard}
-                            className="rounded-2xl border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+                            className="border border-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
                         >
                             New
                         </button>
@@ -556,7 +556,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                             <button
                                 type="button"
                                 onClick={() => onSelectElement(null)}
-                                className="rounded-2xl px-3 py-1.5 text-xs font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                                className="px-3 py-1.5 text-xs font-medium text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
                             >
                                 Clear
                             </button>
@@ -567,7 +567,7 @@ export const WorkspaceSidebar: React.FC<WorkspaceSidebarProps> = ({
                         {elements.length > 0 ? (
                             <div className="space-y-1">{renderLayers(orderedElements)}</div>
                         ) : (
-                            <div className="flex h-full items-center justify-center rounded-[24px] border border-dashed border-neutral-200 bg-neutral-50 px-4 text-center text-sm text-neutral-400">
+                            <div className="flex h-full items-center justify-center border border-dashed border-neutral-200 bg-neutral-50 px-4 text-center text-sm text-neutral-400">
                                 No layers yet.
                             </div>
                         )}

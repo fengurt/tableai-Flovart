@@ -3116,22 +3116,22 @@ const App: React.FC = () => {
                 {isLoading && <Loader progressMessage={progressMessage} />}
                 <ToastStack toasts={toast.toasts} onDismiss={toast.dismiss} />
                 {error && (
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md shadow-lg flex items-center max-w-lg">
+                    <div className="absolute top-4 left-1/2 z-50 flex max-w-lg -translate-x-1/2 items-center border border-red-400 bg-red-100 p-3 text-red-700">
                         <span className="flex-grow">{error}</span>
-                        <button onClick={() => setError(null)} className="ml-4 p-1 rounded-full hover:bg-red-200" title={t('common.close')} aria-label={t('common.close')}>
+                        <button onClick={() => setError(null)} className="ml-4 p-1 hover:bg-red-200" title={t('common.close')} aria-label={t('common.close')}>
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
                         </button>
                     </div>
                 )}
                 {modelAutoSwitchNotice && (
-                    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 p-3 bg-blue-100 border border-blue-400 text-blue-700 rounded-md shadow-lg flex items-center max-w-lg animate-fade-in">
-                        <span className="mr-2">🔄</span>
+                    <div className="absolute top-4 left-1/2 z-50 flex max-w-lg -translate-x-1/2 animate-fade-in items-center border border-[var(--accent-text)] bg-[var(--accent-bg)] p-3 text-[var(--accent-text)]">
+                        <span className="mr-2">↻</span>
                         <span className="flex-grow text-sm">{modelAutoSwitchNotice}</span>
                     </div>
                 )}
             </>}
             main={<>
-            <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"><div className="rounded-xl bg-neutral-800 px-6 py-4 text-sm text-white/60">Loading Settings…</div></div>}>
+            <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"><div className="border border-[var(--border-color)] bg-neutral-800 px-6 py-4 text-sm text-white/60">Loading Settings…</div></div>}>
             <CanvasSettings
                 isOpen={isSettingsPanelOpen} 
                 onClose={() => setIsSettingsPanelOpen(false)} 
@@ -3160,7 +3160,7 @@ const App: React.FC = () => {
 
             {/* ============ A/B 对比弹窗 ============ */}
             {abCompare && (
-                <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"><div className="rounded-xl bg-neutral-800 px-6 py-4 text-sm text-white/60">Loading…</div></div>}>
+                <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"><div className="border border-[var(--border-color)] bg-neutral-800 px-6 py-4 text-sm text-white/60">Loading…</div></div>}>
                 <ABCompareOverlay
                     imageA={abCompare.imageA}
                     imageB={abCompare.imageB}
@@ -3175,33 +3175,33 @@ const App: React.FC = () => {
                 const maskEl = elements.find(e => e.id === maskEditingId) as ImageElement | undefined;
                 if (!maskEl) return null;
                 return (
-                    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9998] flex items-center gap-3 px-4 py-2.5 rounded-2xl shadow-2xl border"
+                    <div className="fixed top-4 left-1/2 z-[9998] flex -translate-x-1/2 items-center gap-3 border px-4 py-2.5"
                          style={{ background: resolvedTheme === 'dark' ? '#1C2333' : '#ffffff', borderColor: resolvedTheme === 'dark' ? '#2A3142' : '#e5e7eb' }}>
                         <span className={`text-sm font-medium ${resolvedTheme === 'dark' ? 'text-white' : 'text-gray-900'}`}>蒙版编辑</span>
                         <div className="h-5 w-px bg-gray-300" />
                         <button onClick={() => setMaskBrushMode('erase')}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium transition ${maskBrushMode === 'erase' ? 'bg-red-500 text-white' : (resolvedTheme === 'dark' ? 'bg-[#2A3142] text-gray-300' : 'bg-gray-100 text-gray-600')}`}>
+                            className={`px-3 py-1 text-xs font-medium transition ${maskBrushMode === 'erase' ? 'bg-red-500 text-white' : (resolvedTheme === 'dark' ? 'bg-[#2A3142] text-gray-300' : 'bg-gray-100 text-gray-600')}`}>
                             擦除
                         </button>
                         <button onClick={() => setMaskBrushMode('reveal')}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium transition ${maskBrushMode === 'reveal' ? 'bg-green-500 text-white' : (resolvedTheme === 'dark' ? 'bg-[#2A3142] text-gray-300' : 'bg-gray-100 text-gray-600')}`}>
+                            className={`px-3 py-1 text-xs font-medium transition ${maskBrushMode === 'reveal' ? 'bg-[var(--accent-text)] text-white' : (resolvedTheme === 'dark' ? 'bg-[#2A3142] text-gray-300' : 'bg-gray-100 text-gray-600')}`}>
                             恢复
                         </button>
                         <div className="h-5 w-px bg-gray-300" />
                         <label className={`text-xs ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>笔刷</label>
-                        <input type="range" min="5" max="100" value={maskBrushSize} onChange={e => setMaskBrushSize(Number(e.target.value))} className="w-20 h-1 accent-blue-500" />
+                        <input type="range" min="5" max="100" value={maskBrushSize} onChange={e => setMaskBrushSize(Number(e.target.value))} className="h-1 w-20 accent-[var(--accent-text)]" />
                         <span className={`text-xs w-6 text-center ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{maskBrushSize}</span>
                         <div className="h-5 w-px bg-gray-300" />
                         <button onClick={clearMask}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}>
+                            className={`px-3 py-1 text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}>
                             清除蒙版
                         </button>
                         <button onClick={commitMask}
-                            className="px-3 py-1 rounded-lg text-xs font-medium bg-blue-500 hover:bg-blue-600 text-white transition">
+                            className="bg-[var(--primary-bg)] px-3 py-1 text-xs font-medium text-[var(--primary-text)] transition hover:bg-[var(--accent-text)]">
                             完成
                         </button>
                         <button onClick={cancelMask}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}>
+                            className={`px-3 py-1 text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}>
                             取消
                         </button>
                     </div>
@@ -3212,17 +3212,17 @@ const App: React.FC = () => {
             {batchResults && (
                 <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
                      onClick={() => setBatchResults(null)}>
-                    <div className={`relative rounded-2xl shadow-2xl p-6 max-w-[90vw] max-h-[90vh] overflow-auto ${resolvedTheme === 'dark' ? 'bg-[#1C2333] text-white' : 'bg-white text-gray-900'}`}
+                    <div className={`relative max-h-[90vh] max-w-[90vw] overflow-auto border p-6 ${resolvedTheme === 'dark' ? 'border-[#2A3142] bg-[#1C2333] text-white' : 'border-[var(--border-color)] bg-white text-gray-900'}`}
                          onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold">批量生成结果 — 选择最佳方案</h3>
                             <div className="flex gap-2">
                                 <button onClick={handleSelectAllBatchResults}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
+                                    className={`px-3 py-1.5 text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
                                     全部放入画布
                                 </button>
                                 <button onClick={() => setBatchResults(null)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
+                                    className={`px-3 py-1.5 text-xs font-medium transition ${resolvedTheme === 'dark' ? 'bg-[#2A3142] hover:bg-[#3A4458] text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}>
                                     关闭
                                 </button>
                             </div>
@@ -3233,7 +3233,7 @@ const App: React.FC = () => {
                         <div className={`grid gap-4 ${batchResults.images.length <= 2 ? 'grid-cols-2' : 'grid-cols-2'}`}>
                             {batchResults.images.map((img, idx) => (
                                 <div key={idx}
-                                     className={`group relative rounded-xl overflow-hidden border-2 transition cursor-pointer hover:scale-[1.02] ${resolvedTheme === 'dark' ? 'border-[#2A3142] hover:border-blue-500' : 'border-gray-200 hover:border-blue-400'}`}
+                                     className={`group relative cursor-pointer overflow-hidden border-2 transition hover:scale-[1.02] ${resolvedTheme === 'dark' ? 'border-[#2A3142] hover:border-[var(--accent-text)]' : 'border-gray-200 hover:border-[var(--accent-text)]'}`}
                                      onClick={() => handleSelectBatchResult(img)}>
                                     <img src={img.href} alt={`方案 ${idx + 1}`}
                                          className="w-full h-auto max-h-[40vh] object-contain"
@@ -3243,7 +3243,7 @@ const App: React.FC = () => {
                                             <span className="text-white text-sm font-medium">方案 {idx + 1}</span>
                                             <span className="text-white/80 text-xs">{img.width}×{img.height}</span>
                                         </div>
-                                        <button className="mt-2 w-full py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition">
+                                        <button className="mt-2 w-full bg-[var(--primary-bg)] py-1.5 text-xs font-medium text-[var(--primary-text)] transition hover:bg-[var(--accent-text)]">
                                             选择此方案
                                         </button>
                                     </div>
@@ -3983,4 +3983,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

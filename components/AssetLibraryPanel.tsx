@@ -14,9 +14,9 @@ interface AssetLibraryPanelProps {
 }
 
 const CategoryTabs: React.FC<{ value: AssetCategory; onChange: (c: AssetCategory) => void }>=({ value, onChange }) => (
-    <div className="grid grid-cols-3 rounded-xl overflow-hidden border border-neutral-200">
+    <div className="grid grid-cols-3 overflow-hidden border border-neutral-200">
         {(['character','scene','prop'] as AssetCategory[]).map(cat => (
-            <button key={cat} onClick={() => onChange(cat)} className={`px-3 py-1.5 text-sm transition-colors ${value===cat? 'bg-neutral-900 text-white':'bg-white hover:bg-neutral-50'} border-r border-neutral-200 first:rounded-l-xl last:border-r-0 last:rounded-r-xl`}>{cat === 'character' ? '角色' : cat === 'scene' ? '场景' : '道具'}</button>
+            <button key={cat} onClick={() => onChange(cat)} className={`border-r border-neutral-200 px-3 py-1.5 text-sm transition-colors last:border-r-0 ${value===cat? 'bg-neutral-900 text-white':'bg-white hover:bg-neutral-50'}`}>{cat === 'character' ? '角色' : cat === 'scene' ? '场景' : '道具'}</button>
         ))}
     </div>
 );
@@ -175,7 +175,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
             
             {/* Draggable + Resizable panel */}
             <div 
-                className={`fixed ${docked ? 'right-4 top-4' : ''} z-30 border border-neutral-200 rounded-2xl shadow-xl bg-white text-neutral-900 overflow-hidden`}
+                className={`fixed ${docked ? 'right-4 top-4' : ''} z-30 overflow-hidden border border-neutral-200 bg-white text-neutral-900`}
                 ref={panelRef}
                 style={{
                     left: docked ? undefined : `${panelPosition.x}px`,
@@ -197,7 +197,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
                     </div>
                     <button 
                         onClick={onClose} 
-                        className="text-neutral-400 hover:text-neutral-900 p-1 rounded-full cursor-pointer" 
+                        className="cursor-pointer p-1 text-neutral-400 hover:text-neutral-900"
                         aria-label="关闭"
                         onMouseDown={(e) => e.stopPropagation()}
                     >
@@ -210,7 +210,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
                     <input 
                         type="text" 
                         placeholder="描述你想要生成的图片..."
-                        className="flex-1 px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 focus:bg-white outline-none"
+                        className="flex-1 border border-neutral-200 bg-neutral-50 px-3 py-2 outline-none focus:border-[var(--accent-text)] focus:bg-white"
                         onKeyDown={(e) => {
                             const target = e.target as HTMLInputElement;
                             if (e.key === 'Enter' && target.value.trim()) {
@@ -220,7 +220,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
                         }}
                     />
                     <button 
-                        className="px-3 py-2 rounded-lg bg-neutral-900 text-white hover:brightness-110"
+                        className="bg-neutral-900 px-3 py-2 text-white hover:bg-[var(--accent-text)]"
                         onClick={() => {
                             const el = panelRef.current?.querySelector('input[type="text"]') as HTMLInputElement | null;
                             if (el && el.value.trim()) { onGenerate(el.value.trim()); el.value = ''; }
@@ -236,7 +236,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
                     {items.map(item => (
                         <div 
                             key={item.id}
-                            className="group inline-block w-full mb-3 break-inside-avoid rounded-xl border border-neutral-200 overflow-hidden hover:shadow cursor-grab active:cursor-grabbing relative bg-neutral-50"
+                            className="group relative mb-3 inline-block w-full cursor-grab break-inside-avoid overflow-hidden border border-neutral-200 bg-neutral-50 active:cursor-grabbing"
                             draggable
                             onDragStart={(e) => handleDragStart(e, item)}
                         >
@@ -252,7 +252,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
                                         onChange={(e) => setEditingName(e.target.value)}
                                         onBlur={() => handleSaveEdit(item.id)}
                                         onKeyDown={(e) => handleKeyDown(e, item.id)}
-                                        className="text-xs px-2 py-1 border border-blue-400 rounded outline-none bg-white/95 backdrop-blur min-w-0 flex-1"
+                                        className="min-w-0 flex-1 border border-[var(--accent-text)] bg-white/95 px-2 py-1 text-xs outline-none"
                                         placeholder="输入素材名称"
                                         aria-label="素材名称"
                                     />
@@ -268,7 +268,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
                                         <div className="flex items-center gap-1">
                                             {onReversePrompt && (
                                                 <button
-                                                    className="pointer-events-auto p-1 rounded bg-white/10 hover:bg-white/20"
+                                                    className="pointer-events-auto border border-white/20 bg-white/10 p-1 hover:bg-white/20"
                                                     title="反推 Prompt"
                                                     onClick={(e) => { e.stopPropagation(); onReversePrompt(item.dataUrl, 'image/png', item.width, item.height); }}
                                                 >
@@ -276,7 +276,7 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
                                                 </button>
                                             )}
                                             <button 
-                                                className="pointer-events-auto p-1 rounded bg-white/10 hover:bg-white/20"
+                                                className="pointer-events-auto border border-white/20 bg-white/10 p-1 hover:bg-white/20"
                                                 title="删除"
                                                 onClick={(e) => { e.stopPropagation(); onRemove(category, item.id); }}
                                             >
@@ -306,5 +306,4 @@ export const AssetLibraryPanel: React.FC<AssetLibraryPanelProps> = ({ isOpen, on
         </>
     );
 };
-
 

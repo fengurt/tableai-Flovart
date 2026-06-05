@@ -1,39 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Libre+Caslon+Text:wght@400;700&display=swap');
 @import "tailwindcss";
 @import "./motion.css";
 
 :root {
     color-scheme: light;
-    --app-bg: #f3f5f9;
-    --panel-bg: rgba(255, 255, 255, 0.92);
+    --brand-ink: #0a1626;
+    --brand-gold: #a88b52;
+    --paper-bg: #f7f9ff;
+    --paper-blue: #e5efff;
+    --app-bg: #f7f9ff;
+    --panel-bg: rgba(255, 255, 255, 0.96);
     --panel-strong: #ffffff;
-    --panel-soft: #f8fafc;
-    --panel-muted: #eef2f6;
-    --border-color: #e4e7ec;
-    --border-strong: #d0d5dd;
-    --text-primary: #111827;
-    --text-secondary: #344054;
-    --text-muted: #667085;
-    --text-subtle: #98a2b3;
-    --toolbar-bg: rgba(255, 255, 255, 0.92);
-    --toolbar-border: #e4e7ec;
-    --toolbar-icon: #475467;
-    --toolbar-icon-active-bg: #111827;
+    --panel-soft: #eef4ff;
+    --panel-muted: #e5efff;
+    --border-color: rgba(10, 22, 38, 0.12);
+    --border-strong: rgba(10, 22, 38, 0.24);
+    --text-primary: #0a1626;
+    --text-secondary: #26313e;
+    --text-muted: #545f72;
+    --text-subtle: #75777d;
+    --toolbar-bg: rgba(255, 255, 255, 0.96);
+    --toolbar-border: rgba(10, 22, 38, 0.12);
+    --toolbar-icon: #545f72;
+    --toolbar-icon-active-bg: #0a1626;
     --toolbar-icon-active-text: #ffffff;
-    --primary-bg: #111827;
+    --primary-bg: #0a1626;
     --primary-text: #ffffff;
-    --input-bg: rgba(255, 255, 255, 0.92);
-    --canvas-bg: #f7f8fb;
-    --shadow-panel: 0 30px 70px rgba(15, 23, 42, 0.16);
-    --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.08);
-    --accent-bg: #eef4ff;
-    --accent-text: #175cd3;
-    --ui-bg-color: rgba(255, 255, 255, 0.92);
-    --button-bg-color: #111827;
-    --flovart-panel-bg: rgba(244, 245, 248, 0.92);
-    --flovart-panel-border: rgba(212, 212, 216, 0.84);
-    --flovart-text-primary: #18181b;
-    --flovart-text-muted: #71717a;
-    --flovart-text-ghost: #a1a1aa;
+    --input-bg: rgba(255, 255, 255, 0.96);
+    --canvas-bg: #eef4ff;
+    --shadow-panel: none;
+    --shadow-soft: none;
+    --accent-bg: rgba(168, 139, 82, 0.16);
+    --accent-text: #745b27;
+    --ui-bg-color: rgba(255, 255, 255, 0.96);
+    --button-bg-color: #0a1626;
+    --flovart-panel-bg: rgba(255, 255, 255, 0.96);
+    --flovart-panel-border: rgba(10, 22, 38, 0.12);
+    --flovart-text-primary: #0a1626;
+    --flovart-text-muted: #545f72;
+    --flovart-text-ghost: #75777d;
     --flovart-input-bg: rgba(255, 255, 255, 0.7);
     --flovart-chip-bg: #f4f4f5;
     --flovart-chip-border: #d4d4d8;
@@ -41,37 +46,37 @@
 }
 
 :root[data-theme='light'] {
-    --app-bg: #f3f5f9;
-    --panel-bg: rgba(255, 255, 255, 0.92);
+    --app-bg: #f7f9ff;
+    --panel-bg: rgba(255, 255, 255, 0.96);
     --panel-strong: #ffffff;
-    --panel-soft: #f8fafc;
-    --panel-muted: #eef2f6;
-    --border-color: #e4e7ec;
-    --border-strong: #d0d5dd;
-    --text-primary: #111827;
-    --text-secondary: #344054;
-    --text-muted: #667085;
-    --text-subtle: #98a2b3;
-    --toolbar-bg: rgba(255, 255, 255, 0.92);
-    --toolbar-border: #e4e7ec;
-    --toolbar-icon: #475467;
-    --toolbar-icon-active-bg: #111827;
+    --panel-soft: #eef4ff;
+    --panel-muted: #e5efff;
+    --border-color: rgba(10, 22, 38, 0.12);
+    --border-strong: rgba(10, 22, 38, 0.24);
+    --text-primary: #0a1626;
+    --text-secondary: #26313e;
+    --text-muted: #545f72;
+    --text-subtle: #75777d;
+    --toolbar-bg: rgba(255, 255, 255, 0.96);
+    --toolbar-border: rgba(10, 22, 38, 0.12);
+    --toolbar-icon: #545f72;
+    --toolbar-icon-active-bg: #0a1626;
     --toolbar-icon-active-text: #ffffff;
-    --primary-bg: #111827;
+    --primary-bg: #0a1626;
     --primary-text: #ffffff;
-    --input-bg: rgba(255, 255, 255, 0.92);
-    --canvas-bg: #f7f8fb;
-    --shadow-panel: 0 30px 70px rgba(15, 23, 42, 0.16);
-    --shadow-soft: 0 16px 40px rgba(15, 23, 42, 0.08);
-    --accent-bg: #eef4ff;
-    --accent-text: #175cd3;
-    --ui-bg-color: rgba(255, 255, 255, 0.92);
-    --button-bg-color: #111827;
-    --flovart-panel-bg: rgba(244, 245, 248, 0.94);
-    --flovart-panel-border: rgba(212, 212, 216, 0.8);
-    --flovart-text-primary: #18181b;
-    --flovart-text-muted: #52525b;
-    --flovart-text-ghost: #94949e;
+    --input-bg: rgba(255, 255, 255, 0.96);
+    --canvas-bg: #eef4ff;
+    --shadow-panel: none;
+    --shadow-soft: none;
+    --accent-bg: rgba(168, 139, 82, 0.16);
+    --accent-text: #745b27;
+    --ui-bg-color: rgba(255, 255, 255, 0.96);
+    --button-bg-color: #0a1626;
+    --flovart-panel-bg: rgba(255, 255, 255, 0.96);
+    --flovart-panel-border: rgba(10, 22, 38, 0.12);
+    --flovart-text-primary: #0a1626;
+    --flovart-text-muted: #545f72;
+    --flovart-text-ghost: #75777d;
     --flovart-input-bg: rgba(255, 255, 255, 0.75);
     --flovart-chip-bg: rgba(228, 228, 231, 0.6);
     --flovart-chip-border: #d4d4d8;
@@ -80,37 +85,37 @@
 
 :root[data-theme='dark'] {
     color-scheme: dark;
-    --app-bg: #0c0f14;
-    --panel-bg: rgba(18, 21, 27, 0.94);
-    --panel-strong: #161a22;
-    --panel-soft: #1b2029;
-    --panel-muted: #212734;
-    --border-color: #2a3140;
-    --border-strong: #3a4458;
-    --text-primary: #f3f4f6;
-    --text-secondary: #d0d5dd;
-    --text-muted: #98a2b3;
-    --text-subtle: #667085;
-    --toolbar-bg: rgba(15, 18, 24, 0.94);
-    --toolbar-border: #2a3140;
-    --toolbar-icon: #d0d5dd;
-    --toolbar-icon-active-bg: #f3f4f6;
-    --toolbar-icon-active-text: #111827;
-    --primary-bg: #f3f4f6;
-    --primary-text: #111827;
-    --input-bg: rgba(22, 26, 34, 0.92);
-    --canvas-bg: #11151c;
-    --shadow-panel: 0 30px 70px rgba(0, 0, 0, 0.34);
-    --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.24);
-    --accent-bg: rgba(47, 128, 237, 0.18);
-    --accent-text: #7cb4ff;
-    --ui-bg-color: rgba(18, 21, 27, 0.94);
-    --button-bg-color: #f3f4f6;
-    --flovart-panel-bg: rgba(18, 20, 26, 0.92);
-    --flovart-panel-border: rgba(39, 39, 42, 0.8);
-    --flovart-text-primary: #f4f4f5;
-    --flovart-text-muted: #a1a1aa;
-    --flovart-text-ghost: #52525b;
+    --app-bg: #0a1626;
+    --panel-bg: rgba(16, 28, 44, 0.96);
+    --panel-strong: #101c2c;
+    --panel-soft: #182436;
+    --panel-muted: #26313e;
+    --border-color: rgba(233, 241, 255, 0.14);
+    --border-strong: rgba(233, 241, 255, 0.26);
+    --text-primary: #e9f1ff;
+    --text-secondary: #bbc7dd;
+    --text-muted: #798499;
+    --text-subtle: #545f72;
+    --toolbar-bg: rgba(16, 28, 44, 0.96);
+    --toolbar-border: rgba(233, 241, 255, 0.14);
+    --toolbar-icon: #bbc7dd;
+    --toolbar-icon-active-bg: #fedb9b;
+    --toolbar-icon-active-text: #101c2c;
+    --primary-bg: #fedb9b;
+    --primary-text: #101c2c;
+    --input-bg: rgba(16, 28, 44, 0.96);
+    --canvas-bg: #101c2c;
+    --shadow-panel: none;
+    --shadow-soft: none;
+    --accent-bg: rgba(168, 139, 82, 0.24);
+    --accent-text: #fedb9b;
+    --ui-bg-color: rgba(16, 28, 44, 0.96);
+    --button-bg-color: #fedb9b;
+    --flovart-panel-bg: rgba(16, 28, 44, 0.96);
+    --flovart-panel-border: rgba(233, 241, 255, 0.14);
+    --flovart-text-primary: #e9f1ff;
+    --flovart-text-muted: #bbc7dd;
+    --flovart-text-ghost: #798499;
     --flovart-input-bg: rgba(0, 0, 0, 0.3);
     --flovart-chip-bg: #09090b;
     --flovart-chip-border: #27272a;
@@ -131,7 +136,7 @@ body,
 
 body {
     font-family:
-        'Inter',
+        'Hanken Grotesk',
         'PingFang SC',
         'Microsoft YaHei',
         system-ui,
@@ -139,6 +144,7 @@ body {
         BlinkMacSystemFont,
         'Segoe UI',
         sans-serif;
+    font-variant-numeric: tabular-nums;
 }
 
 .theme-aware {
@@ -2168,90 +2174,78 @@ input[type='range'].toolbar-range::-moz-range-thumb:hover {
 }
 
 /* ============================================================
-   Island UI — hand-drawn / tactile design system
-   Inspired by Animal Crossing-style warmth: parchment surfaces,
-   pill shapes, zero-blur "pressable" drop shadows, rounded type.
-   Self-built tokens (no external dep). Warm light + warm dark.
+   iTRUST editorial terminal tokens for prompt and agent surfaces.
    ============================================================ */
 :root {
-  --isl-font: "Nunito", "Zen Maru Gothic", "Noto Sans SC", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  --isl-font: "Hanken Grotesk", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
 
-  /* Surfaces — paper white / off-white */
-  --isl-surface: #faf9f6;
-  --isl-surface-2: #f1efe9;
-  --isl-surface-sunk: #f4f2ec;
+  --isl-surface: #f7f9ff;
+  --isl-surface-2: #eef4ff;
+  --isl-surface-sunk: #e5efff;
   --isl-card: #ffffff;
 
-  /* Ink — pen-stroke charcoal */
-  --isl-ink: #1f1d1a;
-  --isl-ink-soft: #6b6862;
-  --isl-ink-ghost: #a8a49c;
+  --isl-ink: #0a1626;
+  --isl-ink-soft: #545f72;
+  --isl-ink-ghost: #75777d;
 
-  /* Accents — single mint pop */
-  --isl-mint: #19c8b9;
-  --isl-mint-deep: #12a89b;
-  --isl-mint-bg: #e3f7f4;
-  --isl-sun: #f5c31c;
-  --isl-coral: #e8615a;
-  --isl-coral-deep: #cf4b45;
+  --isl-mint: #a88b52;
+  --isl-mint-deep: #745b27;
+  --isl-mint-bg: rgba(168, 139, 82, 0.16);
+  --isl-sun: #e3c284;
+  --isl-coral: #ba1a1a;
+  --isl-coral-deep: #93000a;
 
-  /* Borders + edges (the pressable 3D drop) */
-  --isl-border: #e3e0d8;
-  --isl-border-strong: #cfcbc1;
-  --isl-edge: #d6d2c8;
-  --isl-edge-mint: #0f9a8f;
-  --isl-edge-coral: #b83f3a;
+  --isl-border: rgba(10, 22, 38, 0.12);
+  --isl-border-strong: rgba(10, 22, 38, 0.24);
+  --isl-edge: rgba(10, 22, 38, 0.18);
+  --isl-edge-mint: #745b27;
+  --isl-edge-coral: #93000a;
 
-  /* Radii — chunky + rounded */
-  --isl-r-sm: 14px;
-  --isl-r: 18px;
-  --isl-r-lg: 24px;
-  --isl-r-pill: 999px;
+  --isl-r-sm: 0;
+  --isl-r: 0;
+  --isl-r-lg: 0;
+  --isl-r-pill: 0;
 
-  /* Soft ambient shadows */
-  --isl-shadow-sm: 0 2px 6px rgba(31, 29, 26, 0.06);
-  --isl-shadow: 0 6px 18px rgba(31, 29, 26, 0.1);
-  --isl-shadow-lg: 0 14px 36px rgba(31, 29, 26, 0.14);
+  --isl-shadow-sm: none;
+  --isl-shadow: none;
+  --isl-shadow-lg: none;
 }
 
 :root[data-theme='dark'] {
-  /* Charcoal paper dark mapping — ink-on-slate */
-  --isl-surface: #1a1917;
-  --isl-surface-2: #232220;
-  --isl-surface-sunk: #151412;
-  --isl-card: #201f1d;
+  --isl-surface: #0a1626;
+  --isl-surface-2: #101c2c;
+  --isl-surface-sunk: #182436;
+  --isl-card: #101c2c;
 
-  --isl-ink: #f4f2ec;
-  --isl-ink-soft: #b4b0a8;
-  --isl-ink-ghost: #76726b;
+  --isl-ink: #e9f1ff;
+  --isl-ink-soft: #bbc7dd;
+  --isl-ink-ghost: #798499;
 
-  --isl-mint: #3ad9c9;
-  --isl-mint-deep: #1fb8a9;
-  --isl-mint-bg: rgba(58, 217, 201, 0.14);
-  --isl-sun: #f7d04a;
-  --isl-coral: #f07a72;
-  --isl-coral-deep: #e8615a;
+  --isl-mint: #fedb9b;
+  --isl-mint-deep: #fedb9b;
+  --isl-mint-bg: rgba(254, 219, 155, 0.14);
+  --isl-sun: #e3c284;
+  --isl-coral: #ffb4ab;
+  --isl-coral-deep: #ffb4ab;
 
-  --isl-border: #3a3834;
-  --isl-border-strong: #4c4944;
-  --isl-edge: #100f0e;
-  --isl-edge-mint: #0c8479;
-  --isl-edge-coral: #b8463f;
+  --isl-border: rgba(233, 241, 255, 0.14);
+  --isl-border-strong: rgba(233, 241, 255, 0.26);
+  --isl-edge: rgba(233, 241, 255, 0.2);
+  --isl-edge-mint: #fedb9b;
+  --isl-edge-coral: #ffb4ab;
 
-  --isl-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
-  --isl-shadow: 0 6px 18px rgba(0, 0, 0, 0.46);
-  --isl-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.54);
+  --isl-shadow-sm: none;
+  --isl-shadow: none;
+  --isl-shadow-lg: none;
 }
 
 /* ── Tactile shell: a chunky parchment panel ── */
 .isl-shell {
   position: relative;
   border-radius: var(--isl-r-lg);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.4), transparent 40%),
-    linear-gradient(180deg, var(--isl-card), var(--isl-surface));
-  border: 1.5px solid var(--isl-border);
-  box-shadow: 0 4px 0 0 var(--isl-edge), var(--isl-shadow);
+  background: var(--isl-card);
+  border: 1px solid var(--isl-border);
+  box-shadow: none;
   color: var(--isl-ink);
   font-family: var(--isl-font);
 }
@@ -2268,27 +2262,25 @@ input[type='range'].toolbar-range::-moz-range-thumb:hover {
   align-items: center;
   gap: 6px;
   border-radius: var(--isl-r-pill);
-  border: 1.5px solid var(--isl-border-strong);
+  border: 1px solid var(--isl-border-strong);
   background: var(--isl-surface);
   color: var(--isl-ink);
   font-family: var(--isl-font);
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 2px 0 0 var(--isl-edge);
-  transition: transform 200ms cubic-bezier(.2,1.4,.3,1), box-shadow 200ms ease, background 200ms ease, border-color 200ms ease, color 200ms ease;
+  box-shadow: none;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
 .isl-chip:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 3px 0 0 var(--isl-edge), var(--isl-shadow-sm);
   border-color: var(--isl-mint);
   color: var(--isl-mint-deep);
 }
 
 .isl-chip:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: 0 0 0 0 var(--isl-edge);
 }
 
 .isl-chip--active {
@@ -2311,33 +2303,32 @@ input[type='range'].toolbar-range::-moz-range-thumb:hover {
   justify-content: center;
   gap: 6px;
   border-radius: var(--isl-r-pill);
-  border: none;
+  border: 1px solid var(--isl-mint-deep);
   background: var(--isl-mint);
-  color: #fff;
+  color: #0a1626;
   font-family: var(--isl-font);
   font-weight: 800;
   letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 5px 0 0 var(--isl-edge-mint);
-  transition: transform 180ms cubic-bezier(.2,1.4,.3,1), box-shadow 180ms ease, background 180ms ease;
+  box-shadow: none;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
 }
 
 .isl-go:hover:not(:disabled) {
   transform: translateY(-1px);
   background: var(--isl-mint-deep);
-  box-shadow: 0 6px 0 0 var(--isl-edge-mint);
+  border-color: var(--isl-mint-deep);
+  color: #ffffff;
 }
 
 .isl-go:active:not(:disabled) {
   transform: translateY(5px);
-  box-shadow: 0 0 0 0 var(--isl-edge-mint);
 }
 
 .isl-go:disabled {
   cursor: not-allowed;
   background: var(--isl-border-strong);
   color: var(--isl-card);
-  box-shadow: 0 4px 0 0 var(--isl-edge);
   opacity: 0.7;
 }
 
@@ -2345,8 +2336,8 @@ input[type='range'].toolbar-range::-moz-range-thumb:hover {
 .isl-pop {
   border-radius: var(--isl-r-lg);
   background: var(--isl-card);
-  border: 1.5px solid var(--isl-border-strong);
-  box-shadow: 0 4px 0 0 var(--isl-edge), var(--isl-shadow-lg);
+  border: 1px solid var(--isl-border-strong);
+  box-shadow: none;
   color: var(--isl-ink);
   font-family: var(--isl-font);
   animation: flv-pop 180ms cubic-bezier(.2,1.35,.3,1) both;
@@ -2356,17 +2347,17 @@ input[type='range'].toolbar-range::-moz-range-thumb:hover {
 .isl-well {
   border-radius: var(--isl-r);
   background: var(--isl-surface-sunk);
-  border: 1.5px solid var(--isl-border);
-  box-shadow: inset 0 2px 5px rgba(107, 74, 37, 0.1);
+  border: 1px solid var(--isl-border);
+  box-shadow: none;
 }
 
 :root[data-theme='dark'] .isl-well {
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
 }
 
 .isl-well:focus-within {
   border-color: var(--isl-mint);
-  box-shadow: inset 0 2px 5px rgba(107, 74, 37, 0.1), 0 0 0 4px var(--isl-mint-bg);
+  box-shadow: 0 0 0 2px var(--isl-mint-bg);
 }
 
 /* ── Menu option row ── */
@@ -2450,4 +2441,167 @@ input[type='range'].toolbar-range::-moz-range-thumb:hover {
     transition: none !important;
     transform: none !important;
   }
+}
+
+/* ============================================================
+   iTRUST 5.3 shell pass: editorial finance UI, hairlines, sharp chrome.
+   ============================================================ */
+.financial-shell {
+  background:
+    linear-gradient(rgba(10, 22, 38, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10, 22, 38, 0.035) 1px, transparent 1px),
+    var(--app-bg) !important;
+  background-size: 64px 64px;
+  font-family: "Hanken Grotesk", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+
+:root[data-theme='dark'] .financial-shell {
+  background:
+    linear-gradient(rgba(233, 241, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(233, 241, 255, 0.035) 1px, transparent 1px),
+    var(--app-bg) !important;
+}
+
+.financial-shell h1,
+.financial-shell h2,
+.financial-shell h3,
+.financial-shell .canvas-workspace-switcher__tab.is-active,
+.financial-shell .text-base.font-semibold,
+.financial-shell .text-lg.font-semibold {
+  font-family: "Libre Caslon Text", Georgia, serif;
+  font-weight: 400;
+}
+
+.financial-shell [class*="rounded"],
+.financial-shell .canvas-workspace-switcher,
+.financial-shell .canvas-workspace-switcher__tab,
+.financial-shell .canvas-floating-panel,
+.financial-shell .canvas-icon-button,
+.financial-shell .compact-sidebar-panel,
+.financial-shell .compact-right-panel,
+.financial-shell .history-card,
+.financial-shell .history-card-img,
+.financial-shell .inspiration-item,
+.financial-shell .workflow-node-card,
+.financial-shell .workflow-floating-composer,
+.financial-shell .workflow-tool-rail,
+.financial-shell .workflow-bottom-controls {
+  border-radius: 0 !important;
+}
+
+.financial-shell [class*="shadow"],
+.financial-shell .canvas-workspace-switcher,
+.financial-shell .canvas-floating-panel,
+.financial-shell .compact-sidebar-panel,
+.financial-shell .compact-right-panel,
+.financial-shell .history-card:hover,
+.financial-shell .inspiration-item:hover,
+.financial-shell .workflow-node-card,
+.financial-shell .workflow-floating-composer,
+.financial-shell .workflow-tool-rail,
+.financial-shell .workflow-bottom-controls {
+  box-shadow: none !important;
+}
+
+.financial-shell .compact-sidebar-panel,
+.financial-shell .compact-right-panel,
+.financial-shell .canvas-workspace-switcher,
+.financial-shell .canvas-floating-panel,
+.financial-shell .isl-shell,
+.financial-shell .isl-pop,
+.financial-shell .workflow-tool-rail,
+.financial-shell .workflow-left-panel,
+.financial-shell .workflow-inspector-panel,
+.financial-shell .workflow-minimap,
+.financial-shell .workflow-floating-composer {
+  border: 1px solid var(--border-color) !important;
+  background: var(--panel-bg) !important;
+  backdrop-filter: none !important;
+}
+
+.financial-shell .canvas-workspace-switcher {
+  min-height: 42px;
+  padding: 0;
+}
+
+.financial-shell .canvas-workspace-switcher__tab {
+  min-height: 40px;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-muted);
+  letter-spacing: 0;
+}
+
+.financial-shell .canvas-workspace-switcher__tab:last-child {
+  border-right: 0;
+}
+
+.financial-shell .canvas-workspace-switcher__tab.is-active,
+.financial-shell .canvas-icon-button.is-active,
+.financial-shell .canvas-icon-button--primary,
+.financial-shell .toolbar-button-active,
+.financial-shell .isl-chip--active {
+  background: var(--primary-bg) !important;
+  border-color: var(--primary-bg) !important;
+  color: var(--primary-text) !important;
+}
+
+.financial-shell .canvas-workspace-switcher__tab:hover,
+.financial-shell .canvas-icon-button:hover,
+.financial-shell .isl-chip:hover:not(:disabled),
+.financial-shell button:hover:not(:disabled) {
+  border-color: var(--accent-text);
+}
+
+.financial-shell button:focus-visible,
+.financial-shell input:focus-visible,
+.financial-shell textarea:focus-visible,
+.financial-shell select:focus-visible,
+.financial-shell [role='button']:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+.financial-shell .compact-canvas-stage svg {
+  background: var(--canvas-bg);
+}
+
+.financial-shell .rich-prompt-editor .ProseMirror .mention-node {
+  border-radius: 0;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+}
+
+.financial-shell .toolbar-range::-webkit-slider-runnable-track {
+  background: var(--border-strong);
+  border-radius: 0;
+}
+
+.financial-shell .toolbar-range::-moz-range-track {
+  background: var(--border-strong);
+  border-radius: 0;
+}
+
+.financial-shell .toolbar-range::-webkit-slider-thumb,
+.financial-shell .toolbar-range::-moz-range-thumb {
+  border-radius: 0;
+  background: var(--accent-text);
+  border-color: var(--panel-strong);
+  box-shadow: none;
+}
+
+.financial-shell .workflow-libtv {
+  background: var(--canvas-bg) !important;
+}
+
+.financial-shell .workflow-libtv-grid {
+  background-image:
+    linear-gradient(rgba(10, 22, 38, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10, 22, 38, 0.06) 1px, transparent 1px) !important;
+  background-size: 40px 40px !important;
+}
+
+:root[data-theme='dark'] .financial-shell .workflow-libtv-grid {
+  background-image:
+    linear-gradient(rgba(233, 241, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(233, 241, 255, 0.055) 1px, transparent 1px) !important;
 }

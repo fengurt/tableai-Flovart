@@ -22,7 +22,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   onDrop,
 }) => (
   <div
-    className="theme-aware w-screen h-screen flex flex-col font-sans"
+    className="financial-shell theme-aware w-screen h-screen flex flex-col font-sans"
     style={{ backgroundColor: themeBackground }}
     onDragOver={onDragOver}
     onDrop={onDrop}

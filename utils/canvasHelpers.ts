@@ -338,15 +338,15 @@ export const createNewBoard = (name: string): Board => {
 
 export const THEME_PALETTES = {
     light: {
-        appBackground: '#f3f5f9',
-        canvasBackground: '#f7f8fb',
-        uiBgColor: 'rgba(255, 255, 255, 0.92)',
-        buttonBgColor: '#111827',
+        appBackground: '#f7f9ff',
+        canvasBackground: '#eef4ff',
+        uiBgColor: 'rgba(255, 255, 255, 0.96)',
+        buttonBgColor: '#0a1626',
     },
     dark: {
-        appBackground: '#0c0f14',
-        canvasBackground: '#11151c',
-        uiBgColor: 'rgba(18, 21, 27, 0.94)',
-        buttonBgColor: '#f3f4f6',
+        appBackground: '#0a1626',
+        canvasBackground: '#101c2c',
+        uiBgColor: 'rgba(16, 28, 44, 0.96)',
+        buttonBgColor: '#fedb9b',
     },
 } as const;

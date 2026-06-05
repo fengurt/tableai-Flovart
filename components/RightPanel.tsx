@@ -58,12 +58,12 @@ const CategoryTabs: React.FC<{ value: AssetCategory; onChange: (c: AssetCategory
 );
 
 const EmptyHistory: React.FC<{ isDark?: boolean }> = ({ isDark }) => (
-    <div className={`flex flex-1 items-center justify-center rounded-2xl border border-dashed px-6 py-10 text-center ${
+    <div className={`flex flex-1 items-center justify-center border border-dashed px-6 py-10 text-center ${
         isDark ? 'border-[#2A3140] bg-[#161A22]' : 'border-neutral-200 bg-neutral-50'
     }`}>
         <div>
-            <div className={`mx-auto flex h-12 w-12 items-center justify-center rounded-xl ${
-                isDark ? 'bg-[#1B2029] text-[#667085]' : 'bg-white text-neutral-300 shadow-sm'
+            <div className={`mx-auto flex h-12 w-12 items-center justify-center border ${
+                isDark ? 'border-[#2A3140] bg-[#1B2029] text-[#667085]' : 'border-neutral-200 bg-white text-neutral-300'
             }`}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <rect x="3" y="3" width="18" height="18" rx="3" />
@@ -73,8 +73,8 @@ const EmptyHistory: React.FC<{ isDark?: boolean }> = ({ isDark }) => (
             </div>
             <p className={`mt-3 text-sm font-medium ${isDark ? 'text-[#D0D5DD]' : 'text-neutral-700'}`}>还没有历史生成内容</p>
             <p className={`mt-1 text-xs ${isDark ? 'text-[#667085]' : 'text-neutral-500'}`}>在底部输入提示词并点击生成，结果会自动保存到这里。</p>
-            <div className={`mx-auto mt-4 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium ${
-                isDark ? 'border-[#2A3140] bg-[#1B2029] text-[#D0D5DD]' : 'border-neutral-200 bg-white text-neutral-700 shadow-sm'
+            <div className={`mx-auto mt-4 inline-flex items-center gap-2 border px-3 py-1.5 text-xs font-medium ${
+                isDark ? 'border-[#2A3140] bg-[#1B2029] text-[#D0D5DD]' : 'border-neutral-200 bg-white text-neutral-700'
             }`}>
                 <span>向下看</span>
                 <span>↓</span>
@@ -467,7 +467,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                     transition: 'opacity 0.2s ease-out, transform 0.28s ease-out',
                     transform: isMinimized ? 'translateY(0)' : 'translateY(-6px)',
                 }}
-                className={`theme-aware fixed z-20 flex h-10 w-10 items-center justify-center rounded-xl border shadow-sm ${
+                className={`theme-aware fixed z-20 flex h-10 w-10 items-center justify-center border ${
                     isDark ? 'border-[#2A3140] bg-[#12151B] text-[#98A2B3] hover:text-white' : 'border-neutral-200 bg-white text-neutral-600 hover:text-neutral-900'
                 }`}
                 title="打开侧边栏"
@@ -490,9 +490,9 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                     transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease-out, width 0.25s ease-out',
                     pointerEvents: isMinimized ? 'none' : 'auto',
                 }}
-                className={`compact-right-panel theme-aware fixed z-[30] flex flex-col overflow-hidden border shadow-xl backdrop-blur-xl ${
-                    compactMode ? 'rounded-[24px]' : 'rounded-[28px]'
-                } ${isDark ? 'border-[#2A3140] bg-[#12151B]/96' : 'border-neutral-200/60 bg-white/96'}`}
+                className={`compact-right-panel theme-aware fixed z-[30] flex flex-col overflow-hidden border ${
+                    isDark ? 'border-[#2A3140] bg-[#12151B]/96' : 'border-neutral-200/60 bg-white/96'
+                }`}
             >
                 <div
                     className={`absolute left-0 top-0 z-10 h-full cursor-ew-resize transition-colors hover:bg-blue-400/70 ${compactMode ? 'w-1' : 'w-1.5'}`}
@@ -512,14 +512,14 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                         <button
                             type="button"
                             onClick={onToggleMinimize}
-                            className={`flv-elastic shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors ${isDark ? 'border-white/10 bg-white/[0.04] text-white/52 hover:border-white/18 hover:text-white' : 'border-neutral-200 bg-white text-neutral-500 shadow-sm hover:border-neutral-300 hover:text-neutral-900'}`}
+                            className={`flv-elastic shrink-0 border px-3 py-1.5 text-[11px] font-medium transition-colors ${isDark ? 'border-white/10 bg-white/[0.04] text-white/52 hover:border-white/18 hover:text-white' : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-900'}`}
                             title="Collapse"
                         >
                             Collapse
                         </button>
                     </div>
 
-                    <div className={`mt-3 grid grid-cols-4 gap-1.5 rounded-full border p-1 ${isDark ? 'border-white/10 bg-black/18' : 'border-neutral-200 bg-neutral-100/80'}`}>
+                    <div className={`mt-3 grid grid-cols-4 border ${isDark ? 'border-white/10 bg-black/18' : 'border-neutral-200 bg-neutral-100/80'}`}>
                         {[
                             { key: 'agent' as RightPanelTab, label: 'Agent' },
                             { key: 'history' as RightPanelTab, label: 'History' },
@@ -530,7 +530,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                                 key={tab.key}
                                 type="button"
                                 onClick={() => setActiveTab(tab.key)}
-                                className={`flv-elastic min-w-0 rounded-full px-2 py-1.5 text-[11px] font-semibold transition-all ${activeTab === tab.key ? 'bg-white text-neutral-950 shadow-sm' : isDark ? 'text-white/48 hover:text-white/82' : 'text-neutral-500 hover:text-neutral-900'}`}
+                                className={`flv-elastic min-w-0 border-r border-[var(--border-color)] px-2 py-1.5 text-[11px] font-semibold transition-all last:border-r-0 ${activeTab === tab.key ? 'bg-[var(--primary-bg)] text-[var(--primary-text)]' : isDark ? 'text-white/48 hover:text-white/82' : 'text-neutral-500 hover:text-neutral-900'}`}
                             >
                                 <span className="block truncate">{tab.label}</span>
                             </button>
@@ -547,7 +547,7 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                                         <h3 className={`text-sm font-semibold ${isDark ? 'text-[#F3F4F6]' : 'text-neutral-900'}`}>历史生成</h3>
                                         <p className={`mt-0.5 text-xs ${isDark ? 'text-[#667085]' : 'text-neutral-500'}`}>自动保存到本地，可直接拖到画布。</p>
                                     </div>
-                                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium tabular-nums ${isDark ? 'bg-[#1B2029] text-[#98A2B3]' : 'bg-neutral-100 text-neutral-500'}`}>
+                                    <span className={`border border-[var(--border-color)] px-2 py-0.5 text-[11px] font-medium tabular-nums ${isDark ? 'bg-[#1B2029] text-[#98A2B3]' : 'bg-neutral-100 text-neutral-500'}`}>
                                         {generationHistory.length}
                                     </span>
                                 </div>

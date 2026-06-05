@@ -2,11 +2,11 @@ import React from 'react';
 import { Z } from '../utils/zLayers';
 import type { ToastItem } from '../hooks/useToast';
 
-const LEVEL_STYLES: Record<ToastItem['level'], { bg: string; border: string; text: string; icon: string }> = {
-  info:    { bg: 'bg-blue-100',   border: 'border-blue-400',   text: 'text-blue-700',   icon: '🔄' },
-  success: { bg: 'bg-green-100',  border: 'border-green-400',  text: 'text-green-700',  icon: '✅' },
-  warning: { bg: 'bg-yellow-100', border: 'border-yellow-400', text: 'text-yellow-700', icon: '⚠️' },
-  error:   { bg: 'bg-red-100',    border: 'border-red-400',    text: 'text-red-700',    icon: '' },
+const LEVEL_STYLES: Record<ToastItem['level'], { bg: string; border: string; text: string; mark: string }> = {
+  info:    { bg: 'bg-[var(--accent-bg)]', border: 'border-[var(--accent-text)]', text: 'text-[var(--accent-text)]', mark: 'INFO' },
+  success: { bg: 'bg-green-50', border: 'border-green-700', text: 'text-green-800', mark: 'OK' },
+  warning: { bg: 'bg-yellow-50', border: 'border-yellow-700', text: 'text-yellow-800', mark: 'WARN' },
+  error:   { bg: 'bg-red-50', border: 'border-red-700', text: 'text-red-800', mark: 'ERR' },
 };
 
 interface ToastStackProps {
@@ -27,13 +27,13 @@ export default function ToastStack({ toasts, onDismiss }: ToastStackProps) {
         return (
           <div
             key={t.id}
-            className={`pointer-events-auto p-3 ${s.bg} border ${s.border} ${s.text} rounded-md shadow-lg flex items-center max-w-lg animate-fade-in`}
+            className={`pointer-events-auto flex max-w-lg animate-fade-in items-center border p-3 ${s.bg} ${s.border} ${s.text}`}
           >
-            {s.icon && <span className="mr-2">{s.icon}</span>}
+            <span className="mr-2 font-mono text-[10px] font-semibold tracking-[0.14em]">{s.mark}</span>
             <span className="flex-grow text-sm">{t.message}</span>
             <button
               onClick={() => onDismiss(t.id)}
-              className={`ml-4 p-1 rounded-full hover:opacity-70`}
+              className="ml-4 p-1 hover:opacity-70"
               aria-label="close"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
