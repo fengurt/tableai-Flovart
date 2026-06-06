@@ -35,6 +35,7 @@ interface CanvasSettingsProps {
     usageSummary?: Map<string, KeyUsageSummary>;
     /** 动态模型选项（从 App.tsx 传入，基于用户 Key 计算） */
     dynamicModelOptions?: { text: string[]; image: string[]; video: string[] };
+    isDeploymentManaged?: boolean;
 }
 
 const providerBaseUrl: Record<AIProvider, string> = {
@@ -186,6 +187,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
     setClearKeysOnExit,
     usageSummary,
     dynamicModelOptions,
+    isDeploymentManaged = false,
 }) => {
     const [provider, setProvider] = React.useState<AIProvider>('google');
     const [apiKey, setApiKey] = React.useState('');
@@ -637,7 +639,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                     <div>
                         <h3 className="text-xl font-extrabold text-[var(--isl-ink)]">设置</h3>
                         <p className="mt-1 text-sm text-[var(--isl-ink-soft)]">
-                            管理主题模式、交互方式、API 能力和默认模型。
+                            管理主题模式、交互方式和部署级模型能力。
                         </p>
                     </div>
                     <button
@@ -767,9 +769,9 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                     <section className="space-y-3">
                         <div className="flex items-center justify-between">
                             <div className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDark ? 'text-[#667085]' : 'text-[#98A2B3]'}`}>
-                                🔑 API 配置
+                                API 配置
                             </div>
-                            <div className="flex items-center gap-2">
+                            {!isDeploymentManaged && <div className="flex items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={handleImportKeys}
@@ -810,7 +812,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                                 >
                                     + 添加供应商
                                 </button>
-                            </div>
+                            </div>}
                         </div>
 
                         <div className="space-y-2">
@@ -818,9 +820,10 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                                 <div className={`rounded-2xl border border-dashed px-4 py-6 text-center text-sm ${
                                     isDark ? 'border-[#3A4458] text-[#98A2B3]' : 'border-[#D0D5DD] text-[#667085]'
                                 }`}>
-                                    <div className="mb-2 text-lg">🔑</div>
-                                    <div className="font-medium">还没有配置供应商</div>
-                                    <div className="mt-1 text-xs">点击右上方「+ 添加供应商」按钮开始配置第三方 API Key</div>
+                                    <div className="font-medium">{isDeploymentManaged ? '部署未下发供应商配置' : '还没有配置供应商'}</div>
+                                    <div className="mt-1 text-xs">
+                                        {isDeploymentManaged ? '请检查 window.__FLOVART_CONFIG__.llm 或 VITE_FLOVART_LLM_CONFIG。' : '点击右上方「+ 添加供应商」按钮开始配置第三方 API Key'}
+                                    </div>
                                 </div>
                             ) : (
                                 userApiKeys.map(item => (
@@ -851,7 +854,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                                                 {item.extraConfig?.websiteUrl || item.baseUrl || '本地供应商配置'}
                                             </div>
                                             <div className={`mt-1 text-[11px] ${isDark ? 'text-[#667085]' : 'text-[#98A2B3]'}`}>
-                                                {maskKey(item.key)}
+                                                {isDeploymentManaged ? '部署托管 Key' : maskKey(item.key)}
                                                 {item.extraConfig?.requestFormat && <span> · {item.extraConfig.requestFormat}</span>}
                                                 {item.defaultModel && <span> · 默认 {item.defaultModel}</span>}
                                             </div>
@@ -879,7 +882,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                                             })()}
                                             </div>
                                         </div>
-                                        <div className="ml-3 flex items-center gap-2">
+                                        {!isDeploymentManaged && <div className="ml-3 flex items-center gap-2">
                                             {!item.isDefault ? (
                                                 <button type="button" onClick={() => onSetDefaultApiKey(item.id)} className={`${chipClass} flv-elastic`}>
                                                     设为默认
@@ -912,7 +915,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                                             >
                                                 删除
                                             </button>
-                                        </div>
+                                        </div>}
                                     </div>
                                 ))
                             )}
@@ -946,9 +949,9 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                     </section>
 
                     {/* Security section */}
-                    <section className="space-y-3">
+                    {!isDeploymentManaged && <section className="space-y-3">
                         <div className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDark ? 'text-[#667085]' : 'text-[#98A2B3]'}`}>
-                            🔒 安全
+                            安全
                         </div>
                         <div className={`flex items-center justify-between rounded-2xl p-4 ${isDark ? 'bg-[#161A22]' : 'bg-[#F8FAFC]'}`}>
                             <div>
@@ -976,14 +979,14 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                             </label>
                         </div>
                         <div className={`rounded-2xl border p-3 text-xs ${isDark ? 'border-[#2A3140] text-[#667085]' : 'border-[#E4E7EC] text-[#98A2B3]'}`}>
-                            ✅ API Key 已加密存储（AES-GCM），不再以明文保留在 localStorage 中。
+                            API Key 已加密存储（AES-GCM），不再以明文保留在 localStorage 中。
                         </div>
-                    </section>
+                    </section>}
                 </div>
             </div>
 
             {/* API Key 添加/编辑弹窗（统一版） */}
-            {showKeyModal && (
+            {!isDeploymentManaged && showKeyModal && (
                 <div className="fixed inset-0 z-150 overflow-y-auto bg-black/40 backdrop-blur-sm" onClick={handleCancelEdit}>
                     <div className="flex min-h-[100dvh] items-end justify-center p-2 sm:min-h-full sm:items-center sm:p-6">
                     <div
@@ -1327,4 +1330,3 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
         </div>
     );
 };
-

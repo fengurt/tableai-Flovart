@@ -47,6 +47,7 @@ import { useCanvasInteraction } from './hooks/useCanvasInteraction';
 import { useGeneration } from './hooks/useGeneration';
 import { useToast } from './hooks/useToast';
 import ToastStack from './components/Toast';
+import { AuthFooterActions } from './components/AuthGate';
 import { AppShell } from './components/AppShell';
 import { CanvasWorkspace } from './components/workspaces/CanvasWorkspace';
 import { WorkflowWorkspace } from './components/workspaces/WorkflowWorkspace';
@@ -297,7 +298,7 @@ const persistCharacterLocksToIDB = async (locks: CharacterLockProfile[]): Promis
     await deleteImages(staleKeys);
 };
 
-const App: React.FC = () => {
+const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false }) => {
     const appVersionLabel = useMemo(() => {
         const version = import.meta.env.VITE_APP_VERSION || 'dev';
         const commitSha = import.meta.env.VITE_APP_COMMIT_SHA?.slice(0, 7);
@@ -551,6 +552,7 @@ const App: React.FC = () => {
     // ── Extracted: API key management ──
     const {
         userApiKeys, setUserApiKeys, apiKeysLoaded, showOnboarding, setShowOnboarding,
+        isDeploymentManaged,
         clearKeysOnExit, setClearKeysOnExit, modelPreference, setModelPreference,
         activeUserKeyId, activeUserModelId, setActiveUserModelId, handleUserKeyChange,
         dynamicModelOptions, usageSummaryMap, getPreferredApiKey,
@@ -3154,6 +3156,7 @@ const App: React.FC = () => {
                 setClearKeysOnExit={setClearKeysOnExit}
                 usageSummary={usageSummaryMap}
                 dynamicModelOptions={dynamicModelOptions}
+                isDeploymentManaged={isDeploymentManaged}
             />
             </Suspense>
             {/* ============ 图层蒙版编辑浮动面板 ============ */}
@@ -3255,7 +3258,7 @@ const App: React.FC = () => {
             )}
 
             {/* 新用户引导弹窗 — 无 API Key 时自动出现 */}
-            {showOnboarding && (
+            {!isDeploymentManaged && showOnboarding && (
                 <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"><div className="rounded-xl bg-neutral-800 px-6 py-4 text-sm text-white/60">Loading…</div></div>}>
                 <OnboardingWizard
                     isOpen={showOnboarding}
@@ -3947,11 +3950,13 @@ const App: React.FC = () => {
                         />
                     </div>
                     {/* 底部法律链接 */}
-                    <div className="pointer-events-auto mt-1 flex items-center gap-2 text-[10px] opacity-55 hover:opacity-80 transition-opacity select-none">
+                    <div data-auth-public="true" className="pointer-events-auto mt-1 flex items-center gap-2 text-[10px] opacity-55 hover:opacity-80 transition-opacity select-none">
                         <span className="rounded-full border border-current/15 px-2 py-0.5 font-medium tracking-[0.04em]">
                             {appVersionLabel}
                         </span>
                         <span>·</span>
+                        {authConfigured && <AuthFooterActions />}
+                        {authConfigured && <span>·</span>}
                         <button className="underline-offset-2 hover:underline cursor-pointer bg-transparent border-none p-0 text-inherit text-[10px]" onClick={() => openLegalModal('terms')}>使用条款</button>
                         <span>·</span>
                         <button className="underline-offset-2 hover:underline cursor-pointer bg-transparent border-none p-0 text-inherit text-[10px]" onClick={() => openLegalModal('privacy')}>隐私政策</button><span>·</span><button onClick={() => { const next = resolvedTheme === "dark" ? "light" : "dark"; setThemeMode(next); }} className="cursor-pointer bg-transparent border-none p-0 text-inherit text-[10px] hover:underline">{resolvedTheme === "dark" ? "☀️" : "🌙"}</button><span>·</span><button onClick={() => setLanguage(language === "zho" ? "en" : "zho")} className="cursor-pointer bg-transparent border-none p-0 text-inherit text-[10px] hover:underline">{language === "zho" ? "EN" : "中"}</button>

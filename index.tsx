@@ -3,6 +3,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AuthGate, AuthProviderRoot } from './components/AuthGate';
+import { logtoConfig } from './services/deploymentConfig';
 import './styles/index.css';
 
 const rootElement = document.getElementById('root');
@@ -11,10 +13,16 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+const authConfig = logtoConfig();
+
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <AuthProviderRoot config={authConfig}>
+        <AuthGate configured={!!authConfig}>
+          <App authConfigured={!!authConfig} />
+        </AuthGate>
+      </AuthProviderRoot>
     </ErrorBoundary>
   </React.StrictMode>
 );

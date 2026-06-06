@@ -13,6 +13,7 @@ import {
 } from '../services/aiGateway';
 import { setGeminiRuntimeConfig } from '../services/geminiService';
 import { refreshAllProviderModels, type FetchedModel } from '../services/modelFetcher';
+import { deploymentLlmConfig } from '../services/deploymentConfig';
 
 const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -113,13 +114,17 @@ export function buildAgentRuntimeSummary(input: {
 }
 
 export function useApiKeys(isSettingsPanelOpen: boolean) {
-    const [userApiKeys, setUserApiKeys] = useState<UserApiKey[]>([]);
-    const [apiKeysLoaded, setApiKeysLoaded] = useState(false);
+    const deploymentConfig = useMemo(() => deploymentLlmConfig(), []);
+    const userKeyConfigEnabled = import.meta.env.VITE_ENABLE_USER_API_KEY_CONFIG === 'true';
+    const isDeploymentManaged = !userKeyConfigEnabled;
+    const [userApiKeys, setUserApiKeys] = useState<UserApiKey[]>(() => deploymentConfig.keys);
+    const [apiKeysLoaded, setApiKeysLoaded] = useState(isDeploymentManaged);
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [clearKeysOnExit, setClearKeysOnExit] = useState<boolean>(() => {
         try { return localStorage.getItem('security.clearKeysOnExit') === 'true'; } catch { return false; }
     });
     const [modelPreference, setModelPreference] = useState<ModelPreference>(() => {
+        if (isDeploymentManaged) return deploymentConfig.modelPreference;
         try {
             const raw = localStorage.getItem('modelPreference.v1');
             return raw ? { ...DEFAULT_MODEL_PREFS, ...JSON.parse(raw) } : DEFAULT_MODEL_PREFS;
@@ -250,6 +255,7 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
 
     // 从加密存储异步加载 API Key（首次挂载 + 兼容迁移旧明文）
     useEffect(() => {
+        if (isDeploymentManaged) return;
         let cancelled = false;
         (async () => {
             await migrateLegacyKeys();
@@ -262,16 +268,21 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
             setApiKeysLoaded(true);
         })();
         return () => { cancelled = true; };
-    }, []);
+    }, [isDeploymentManaged]);
 
     // 持久化 API Key（加密写入）
     useEffect(() => {
+        if (isDeploymentManaged) return;
         if (!apiKeysLoaded) return;
         saveKeysEncrypted(userApiKeys);
-    }, [userApiKeys, apiKeysLoaded]);
+    }, [userApiKeys, apiKeysLoaded, isDeploymentManaged]);
 
     // 新用户引导：API Key 异步加载完成后，如果没有任何 Key 且用户未主动跳过，自动弹出引导
     useEffect(() => {
+        if (isDeploymentManaged) {
+            setShowOnboarding(false);
+            return;
+        }
         if (!apiKeysLoaded) return;
         const hasSkipped = localStorage.getItem('onboarding.skipped') === 'true';
         if (userApiKeys.length === 0 && !hasSkipped) {
@@ -279,20 +290,22 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
         } else if (userApiKeys.length > 0) {
             setShowOnboarding(false);
         }
-    }, [apiKeysLoaded, userApiKeys.length]);
+    }, [apiKeysLoaded, userApiKeys.length, isDeploymentManaged]);
 
     // 持久化 clearKeysOnExit 设置
     useEffect(() => {
+        if (isDeploymentManaged) return;
         try { localStorage.setItem('security.clearKeysOnExit', clearKeysOnExit.toString()); } catch { /* non-critical */ }
-    }, [clearKeysOnExit]);
+    }, [clearKeysOnExit, isDeploymentManaged]);
 
     // 退出时清除 API Key
     useEffect(() => {
+        if (isDeploymentManaged) return;
         if (!clearKeysOnExit) return;
         const handleBeforeUnload = () => { clearAllKeyData(); };
         window.addEventListener('beforeunload', handleBeforeUnload);
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-    }, [clearKeysOnExit]);
+    }, [clearKeysOnExit, isDeploymentManaged]);
 
     // ─── Chrome Extension bridge V3: AES-GCM encrypted shared storage ───
     // Storage key and encryption scheme must match extension/popup/popup.js
@@ -359,6 +372,7 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
     // Chrome Extension bridge: sync API keys to chrome.storage.local (V3 encrypted) for content script access
     const isWritingToChromeStorage = useRef(false);
     useEffect(() => {
+        if (isDeploymentManaged) return;
         if (!apiKeysLoaded || typeof chrome === 'undefined' || !chrome?.storage?.local) return;
         isWritingToChromeStorage.current = true;
         encodeKeysForStorage(userApiKeys).then(encrypted => {
@@ -371,10 +385,11 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
         }).catch(() => {
             isWritingToChromeStorage.current = false;
         });
-    }, [userApiKeys, apiKeysLoaded]);
+    }, [userApiKeys, apiKeysLoaded, isDeploymentManaged]);
 
     // Chrome Extension bridge: listen for keys added from extension popup → merge into app (V3 encrypted)
     useEffect(() => {
+        if (isDeploymentManaged) return;
         if (typeof chrome === 'undefined' || !chrome?.storage?.onChanged) return;
         const handleStorageChange = (changes: Record<string, { oldValue?: unknown; newValue?: unknown }>, areaName: string) => {
             if (areaName !== 'local' || !changes[STORAGE_KEY_V2]) return;
@@ -415,11 +430,12 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
         };
         chrome.storage.onChanged.addListener(handleStorageChange);
         return () => chrome.storage.onChanged.removeListener(handleStorageChange);
-    }, []);
+    }, [isDeploymentManaged]);
 
     // 启动时后台自动刷新所有 Provider 的模型列表（带缓存 TTL）
     const autoRefreshRan = useRef(false);
     useEffect(() => {
+        if (isDeploymentManaged) return;
         if (!apiKeysLoaded || userApiKeys.length === 0 || autoRefreshRan.current) return;
         autoRefreshRan.current = true;
         const keysToFetch = userApiKeys
@@ -435,12 +451,13 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
                 return { ...k, models: modelItems, updatedAt: Date.now() };
             }));
         }).catch(() => { /* silent background refresh failure */ });
-    }, [apiKeysLoaded, userApiKeys.length]);
+    }, [apiKeysLoaded, userApiKeys.length, isDeploymentManaged]);
 
     // 持久化 modelPreference
     useEffect(() => {
+        if (isDeploymentManaged) return;
         try { localStorage.setItem('modelPreference.v1', JSON.stringify(modelPreference)); } catch { /* non-critical */ }
-    }, [modelPreference]);
+    }, [modelPreference, isDeploymentManaged]);
 
     const getPreferredApiKey = useCallback((capability: AICapability, provider?: AIProvider) => {
         const requestedModel = getRequestedModelByCapability(modelPreference, capability);
@@ -484,6 +501,7 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
     }, [getPreferredApiKey, modelPreference]);
 
     const handleAddApiKey = useCallback((payload: Omit<UserApiKey, 'id' | 'createdAt' | 'updatedAt'>) => {
+        if (isDeploymentManaged) return;
         const now = Date.now();
         const capabilities = payload.capabilities?.length ? payload.capabilities : inferCapabilitiesByProvider(payload.provider);
         const nextKey: UserApiKey = {
@@ -525,19 +543,22 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
                 })
                 .catch(() => {});
         }
-    }, []);
+    }, [isDeploymentManaged]);
 
     const handleDeleteApiKey = useCallback((id: string) => {
+        if (isDeploymentManaged) return;
         setUserApiKeys(prev => prev.filter(k => k.id !== id));
-    }, []);
+    }, [isDeploymentManaged]);
 
     const handleUpdateApiKey = useCallback((id: string, patch: Partial<Omit<UserApiKey, 'id' | 'createdAt'>>) => {
+        if (isDeploymentManaged) return;
         setUserApiKeys(prev => prev.map(k =>
             k.id === id ? { ...k, ...patch, updatedAt: Date.now() } : k
         ));
-    }, []);
+    }, [isDeploymentManaged]);
 
     const handleSetDefaultApiKey = useCallback((id: string) => {
+        if (isDeploymentManaged) return;
         setUserApiKeys(prev => {
             const target = prev.find(k => k.id === id);
             if (!target) return prev;
@@ -549,11 +570,12 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
                     : k;
             });
         });
-    }, []);
+    }, [isDeploymentManaged]);
 
     return {
         userApiKeys,
         setUserApiKeys,
+        isDeploymentManaged,
         apiKeysLoaded,
         showOnboarding,
         setShowOnboarding,
