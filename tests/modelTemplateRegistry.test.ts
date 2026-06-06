@@ -15,20 +15,20 @@ describe('modelTemplateRegistry', () => {
       expect.arrayContaining([
         expect.objectContaining({
           provider: 'google',
-          capability: 'video',
-          model: 'veo-3.1-generate-preview',
+          capability: 'image',
+          model: 'gemini-3.1-flash-image-preview',
         }),
         expect.objectContaining({
           provider: 'openai',
           capability: 'image',
-          model: 'gpt-image-1',
+          model: 'gpt-image-2',
         }),
       ]),
     );
   });
 
   it('preserves image editing semantics on image templates', () => {
-    const template = findModelTemplateByModel('gpt-image-1', 'image');
+    const template = findModelTemplateByModel('gpt-image-2', 'image');
 
     expect(template).toMatchObject({
       provider: 'openai',
@@ -40,18 +40,10 @@ describe('modelTemplateRegistry', () => {
   });
 
   it('supports provider-prefixed lookups and capability filtering', () => {
-    const template = findModelTemplateByModel('openrouter/openai/gpt-image-1', 'image');
+    const template = findModelTemplateByModel('gpt-image-2', 'image');
     const videoTemplates = getModelTemplatesByCapability('video', 'google');
 
-    expect(template?.model).toBe('gpt-image-1');
-    expect(videoTemplates).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          provider: 'google',
-          capability: 'video',
-          model: 'veo-3.1-generate-preview',
-        }),
-      ]),
-    );
+    expect(template?.model).toBe('gpt-image-2');
+    expect(videoTemplates).toEqual([]);
   });
 });

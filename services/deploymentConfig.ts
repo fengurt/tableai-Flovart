@@ -1,7 +1,7 @@
 import type { LogtoConfig } from '@logto/react';
 import { UserScope } from '@logto/react';
 import type { ModelPreference, UserApiKey } from '../types';
-import { inferCapabilitiesByProvider } from './aiGateway';
+import { DEFAULT_IMAGE_MODEL, DISABLED_VIDEO_MODEL, inferCapabilitiesByProvider } from './aiGateway';
 
 type DeploymentLlmConfig = {
     modelPreference?: Partial<ModelPreference>;
@@ -43,8 +43,15 @@ const runtimeConfig = () => window.__FLOVART_CONFIG__ ?? {};
 
 const DEFAULT_DEPLOYMENT_MODEL_PREFS: ModelPreference = {
     textModel: 'gemini-3-flash-preview',
-    imageModel: 'gemini-3.1-flash-image-preview',
-    videoModel: 'veo-3.1-generate-preview',
+    imageModel: DEFAULT_IMAGE_MODEL,
+    videoModel: DISABLED_VIDEO_MODEL,
+};
+
+const imageOnlyCapabilities = (item: Partial<UserApiKey>) => {
+    const declared = Array.isArray(item.capabilities) && item.capabilities.length > 0
+        ? item.capabilities
+        : inferCapabilitiesByProvider(item.provider!);
+    return declared.filter(capability => capability !== 'video');
 };
 
 const normalizeDeploymentKey = (item: Partial<UserApiKey>): UserApiKey | null => {
@@ -52,10 +59,7 @@ const normalizeDeploymentKey = (item: Partial<UserApiKey>): UserApiKey | null =>
     return {
         id: item.id,
         provider: item.provider,
-        capabilities:
-            Array.isArray(item.capabilities) && item.capabilities.length > 0
-                ? item.capabilities
-                : inferCapabilitiesByProvider(item.provider),
+        capabilities: imageOnlyCapabilities(item),
         key: item.key,
         baseUrl: item.baseUrl,
         name: item.name,

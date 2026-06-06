@@ -4,12 +4,15 @@ import { saveKeysEncrypted, loadKeysDecrypted, clearAllKeyData, migrateLegacyKey
 import { getUsageSummary } from '../utils/usageMonitor';
 import {
     DEFAULT_PROVIDER_MODELS,
+    DEFAULT_IMAGE_MODEL,
+    DISABLED_VIDEO_MODEL,
     inferCapabilitiesByProvider,
     inferCapabilityFromModel,
     inferProviderFromModel,
     isGoogleImageEditModel,
     isGoogleTextToImageModel,
     PROVIDER_LABELS,
+    SUPPORTED_IMAGE_MODELS,
 } from '../services/aiGateway';
 import { setGeminiRuntimeConfig } from '../services/geminiService';
 import { refreshAllProviderModels, type FetchedModel } from '../services/modelFetcher';
@@ -19,8 +22,8 @@ const generateId = () => `id_${Date.now()}_${Math.random().toString(36).substr(2
 
 export const DEFAULT_MODEL_PREFS: ModelPreference = {
     textModel: 'gemini-3-flash-preview',
-    imageModel: 'gemini-3.1-flash-image-preview',
-    videoModel: 'veo-3.1-generate-preview',
+    imageModel: DEFAULT_IMAGE_MODEL,
+    videoModel: DISABLED_VIDEO_MODEL,
 };
 
 const PROVIDER_MODELS = DEFAULT_PROVIDER_MODELS;
@@ -35,6 +38,15 @@ const addUniqueModel = (set: Set<string>, model?: string) => {
     const trimmed = model?.trim();
     if (trimmed) set.add(trimmed);
 };
+
+const SUPPORTED_IMAGE_MODEL_SET = new Set<string>(SUPPORTED_IMAGE_MODELS);
+const isSupportedImageModel = (model?: string) => !!model && SUPPORTED_IMAGE_MODEL_SET.has(model.trim());
+const stripVideoCapability = (capabilities: AICapability[]) => capabilities.filter(capability => capability !== 'video');
+const normalizeModelPreference = (prefs: ModelPreference): ModelPreference => ({
+    ...prefs,
+    imageModel: isSupportedImageModel(prefs.imageModel) ? prefs.imageModel : DEFAULT_MODEL_PREFS.imageModel,
+    videoModel: DISABLED_VIDEO_MODEL,
+});
 
 const buildApiKeyFingerprint = (item: Pick<Partial<UserApiKey>, 'provider' | 'key' | 'baseUrl'>) => {
     const provider = item.provider || '';
@@ -66,18 +78,19 @@ const getRequestedModelByCapability = (modelPreference: ModelPreference, capabil
 };
 
 const FALLBACK_TEXT_OPTIONS = ensureModelOption([...(PROVIDER_MODELS.google?.text || [])], DEFAULT_MODEL_PREFS.textModel);
-const FALLBACK_IMAGE_OPTIONS = ensureModelOption([...(PROVIDER_MODELS.google?.image || [])], DEFAULT_MODEL_PREFS.imageModel);
-const FALLBACK_VIDEO_OPTIONS = ensureModelOption([...(PROVIDER_MODELS.google?.video || [])], DEFAULT_MODEL_PREFS.videoModel);
+const FALLBACK_IMAGE_OPTIONS = [...SUPPORTED_IMAGE_MODELS];
+const FALLBACK_VIDEO_OPTIONS: string[] = [];
 
 export const normalizeApiKeyEntry = (item: Partial<UserApiKey>): UserApiKey | null => {
     if (!item || !item.id || !item.provider || !item.key) return null;
     return {
         id: item.id,
         provider: item.provider,
-        capabilities:
+        capabilities: stripVideoCapability(
             Array.isArray(item.capabilities) && item.capabilities.length > 0
                 ? item.capabilities
-                : inferCapabilitiesByProvider(item.provider),
+                : inferCapabilitiesByProvider(item.provider)
+        ),
         key: item.key,
         baseUrl: item.baseUrl,
         name: item.name,
@@ -124,10 +137,10 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
         try { return localStorage.getItem('security.clearKeysOnExit') === 'true'; } catch { return false; }
     });
     const [modelPreference, setModelPreference] = useState<ModelPreference>(() => {
-        if (isDeploymentManaged) return deploymentConfig.modelPreference;
+        if (isDeploymentManaged) return normalizeModelPreference(deploymentConfig.modelPreference);
         try {
             const raw = localStorage.getItem('modelPreference.v1');
-            return raw ? { ...DEFAULT_MODEL_PREFS, ...JSON.parse(raw) } : DEFAULT_MODEL_PREFS;
+            return normalizeModelPreference(raw ? { ...DEFAULT_MODEL_PREFS, ...JSON.parse(raw) } : DEFAULT_MODEL_PREFS);
         } catch {
             return DEFAULT_MODEL_PREFS;
         }
@@ -147,14 +160,12 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
     const dynamicModelOptions = useMemo(() => {
         const textSet = new Set<string>();
         const imageSet = new Set<string>();
-        const videoSet = new Set<string>();
         for (const key of userApiKeys) {
             const providerModels = PROVIDER_MODELS[key.provider];
-            const caps = key.capabilities?.length ? key.capabilities : inferCapabilitiesByProvider(key.provider);
+            const caps = stripVideoCapability(key.capabilities?.length ? key.capabilities : inferCapabilitiesByProvider(key.provider));
             if (providerModels) {
                 if (caps.includes('text')) providerModels.text.forEach(m => textSet.add(m));
-                if (caps.includes('image')) providerModels.image.forEach(m => imageSet.add(m));
-                if (caps.includes('video')) providerModels.video.forEach(m => videoSet.add(m));
+                if (caps.includes('image')) providerModels.image.filter(isSupportedImageModel).forEach(m => imageSet.add(m));
             }
 
             const userDefinedModels = [
@@ -165,20 +176,18 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
             for (const model of userDefinedModels) {
                 const capability = inferCapabilityFromModel(model);
                 if (capability === 'text' && caps.includes('text')) addUniqueModel(textSet, model);
-                else if (capability === 'image' && caps.includes('image')) addUniqueModel(imageSet, model);
-                else if (capability === 'video' && caps.includes('video')) addUniqueModel(videoSet, model);
+                else if (capability === 'image' && caps.includes('image') && isSupportedImageModel(model)) addUniqueModel(imageSet, model);
                 else if (!capability) {
                     // 模型名无法推断能力时，按 key 自身声明的 capabilities 归类
-                    if (caps.includes('image')) addUniqueModel(imageSet, model);
+                    if (caps.includes('image') && isSupportedImageModel(model)) addUniqueModel(imageSet, model);
                     if (caps.includes('text')) addUniqueModel(textSet, model);
-                    if (caps.includes('video')) addUniqueModel(videoSet, model);
                 }
             }
         }
         return {
             text: ensureModelOption(textSet.size > 0 ? Array.from(textSet) : [...FALLBACK_TEXT_OPTIONS], modelPreference.textModel),
-            image: ensureModelOption(imageSet.size > 0 ? Array.from(imageSet) : [...FALLBACK_IMAGE_OPTIONS], modelPreference.imageModel),
-            video: ensureModelOption(videoSet.size > 0 ? Array.from(videoSet) : [...FALLBACK_VIDEO_OPTIONS], modelPreference.videoModel),
+            image: ensureModelOption(imageSet.size > 0 ? Array.from(imageSet) : [...FALLBACK_IMAGE_OPTIONS], isSupportedImageModel(modelPreference.imageModel) ? modelPreference.imageModel : DEFAULT_MODEL_PREFS.imageModel),
+            video: [...FALLBACK_VIDEO_OPTIONS],
         };
     }, [modelPreference.imageModel, modelPreference.textModel, modelPreference.videoModel, userApiKeys]);
 
@@ -195,7 +204,7 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
         const hasKeyForModel = (model: string, capability: AICapability) => {
             const provider = inferProviderFromModel(model);
             return healthyKeys.some(k => {
-                const caps = k.capabilities?.length ? k.capabilities : inferCapabilitiesByProvider(k.provider);
+                const caps = stripVideoCapability(k.capabilities?.length ? k.capabilities : inferCapabilitiesByProvider(k.provider));
                 return caps.includes(capability) && (k.provider === provider || (k.provider === 'custom' && keyOwnsModel(k, model)));
             });
         };
@@ -203,15 +212,23 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
         const findBestModel = (capability: 'text' | 'image' | 'video', currentModel: string): string | null => {
             if (hasKeyForModel(currentModel, capability)) return null;
             for (const key of healthyKeys) {
-                const caps = key.capabilities?.length ? key.capabilities : inferCapabilitiesByProvider(key.provider);
+                const caps = stripVideoCapability(key.capabilities?.length ? key.capabilities : inferCapabilitiesByProvider(key.provider));
                 if (!caps.includes(capability)) continue;
                 const providerModels = PROVIDER_MODELS[key.provider];
                 if (providerModels) {
-                    const modelList = providerModels[capability];
+                    const modelList = capability === 'image'
+                        ? providerModels.image.filter(isSupportedImageModel)
+                        : providerModels[capability];
                     if (modelList && modelList.length > 0) return modelList[0];
                 }
-                if (key.customModels?.length) return key.customModels[0];
-                if (key.defaultModel) return key.defaultModel;
+                if (capability === 'image') {
+                    const customModel = key.customModels?.find(isSupportedImageModel);
+                    if (customModel) return customModel;
+                    if (isSupportedImageModel(key.defaultModel)) return key.defaultModel!;
+                } else {
+                    if (key.customModels?.length) return key.customModels[0];
+                    if (key.defaultModel) return key.defaultModel;
+                }
             }
             return null;
         };
@@ -222,18 +239,11 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
             if (betterText) updates.textModel = betterText;
             const betterImage = findBestModel('image', prev.imageModel);
             if (betterImage) updates.imageModel = betterImage;
-            const betterVideo = findBestModel('video', prev.videoModel);
-            if (betterVideo) updates.videoModel = betterVideo;
-
             if (Object.keys(updates).length > 0) {
                 const switched: string[] = [];
                 if (updates.imageModel) {
                     const p = PROVIDER_LABELS[inferProviderFromModel(updates.imageModel)] || inferProviderFromModel(updates.imageModel);
                     switched.push(`图片 → ${p}`);
-                }
-                if (updates.videoModel) {
-                    const p = PROVIDER_LABELS[inferProviderFromModel(updates.videoModel)] || inferProviderFromModel(updates.videoModel);
-                    switched.push(`视频 → ${p}`);
                 }
                 if (updates.textModel) {
                     const p = PROVIDER_LABELS[inferProviderFromModel(updates.textModel)] || inferProviderFromModel(updates.textModel);
@@ -476,16 +486,14 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
     useEffect(() => {
         const textProvider = inferProviderFromModel(modelPreference.textModel);
         const imageProvider = inferProviderFromModel(modelPreference.imageModel);
-        const videoProvider = inferProviderFromModel(modelPreference.videoModel);
 
         const googleTextKey = getPreferredApiKey('text', 'google');
         const googleImageKey = getPreferredApiKey('image', 'google');
-        const googleVideoKey = getPreferredApiKey('video', 'google');
 
         setGeminiRuntimeConfig({
             textApiKey: googleTextKey?.key,
             imageApiKey: googleImageKey?.key || googleTextKey?.key,
-            videoApiKey: googleVideoKey?.key || googleImageKey?.key || googleTextKey?.key,
+            videoApiKey: undefined,
             baseUrl: googleTextKey?.baseUrl,
             textModel: textProvider === 'google' ? modelPreference.textModel : undefined,
             imageModel:
@@ -496,14 +504,14 @@ export function useApiKeys(isSettingsPanelOpen: boolean) {
                 imageProvider === 'google' && isGoogleTextToImageModel(modelPreference.imageModel)
                     ? modelPreference.imageModel
                     : undefined,
-            videoModel: videoProvider === 'google' ? modelPreference.videoModel : undefined,
+            videoModel: undefined,
         });
     }, [getPreferredApiKey, modelPreference]);
 
     const handleAddApiKey = useCallback((payload: Omit<UserApiKey, 'id' | 'createdAt' | 'updatedAt'>) => {
         if (isDeploymentManaged) return;
         const now = Date.now();
-        const capabilities = payload.capabilities?.length ? payload.capabilities : inferCapabilitiesByProvider(payload.provider);
+        const capabilities = stripVideoCapability(payload.capabilities?.length ? payload.capabilities : inferCapabilitiesByProvider(payload.provider));
         const nextKey: UserApiKey = {
             ...payload,
             capabilities,

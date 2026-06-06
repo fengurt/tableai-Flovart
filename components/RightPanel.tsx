@@ -707,7 +707,6 @@ export const RightPanel: React.FC<RightPanelProps> = ({
                                 compactMode={compactMode}
                                 generationHistory={generationHistory}
                                 onCreateImage={onCreateImage}
-                                onCreateVideo={onCreateVideo}
                                 runtimeStage={runtimeStage}
                                 runtimeJobs={runtimeJobs}
                             />

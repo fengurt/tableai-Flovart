@@ -119,11 +119,11 @@ describe('diagnoseKeyCapabilities', () => {
     it('无 Key 时报告全部缺失', () => {
         const result = diagnoseKeyCapabilities([]);
         expect(result.covered).toEqual([]);
-        expect(result.missing).toEqual(['text', 'image', 'video']);
+        expect(result.missing).toEqual(['text', 'image']);
         expect(result.warnings.length).toBeGreaterThan(0);
     });
 
-    it('有 Google Key 时覆盖 text/image/video', () => {
+    it('有 Google Key 时覆盖 text/image', () => {
         const keys: UserApiKey[] = [{
             id: '1', provider: 'google', key: 'AIzaSyFakeKey123456',
             capabilities: ['text', 'image', 'video'],
@@ -132,7 +132,6 @@ describe('diagnoseKeyCapabilities', () => {
         const result = diagnoseKeyCapabilities(keys);
         expect(result.covered).toContain('text');
         expect(result.covered).toContain('image');
-        expect(result.covered).toContain('video');
         expect(result.missing).toEqual([]);
     });
 
@@ -156,7 +155,7 @@ describe('explainKeyCapabilities', () => {
         }];
 
         const result = explainKeyCapabilities(keys);
-        expect(result.map(r => r.capability)).toEqual(['text', 'image', 'video']);
+        expect(result.map(r => r.capability)).toEqual(['text', 'image']);
         expect(result.every(r => r.supported)).toBe(true);
     });
 
@@ -171,7 +170,7 @@ describe('explainKeyCapabilities', () => {
 
     it('returns per-capability reasons', () => {
         const result = explainKeyCapabilities([]);
-        expect(result).toHaveLength(3);
+        expect(result).toHaveLength(2);
         result.forEach(r => {
             expect(r.supported).toBe(false);
             expect(r.reason.length).toBeGreaterThan(0);

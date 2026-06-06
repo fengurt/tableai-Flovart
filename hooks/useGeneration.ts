@@ -219,6 +219,8 @@ export function useGeneration(params: UseGenerationParams) {
         return key && model ? { key, model } : null;
     }, [getPreferredApiKey]);
 
+    const isDisabledGenerationMode = (mode: string) => mode === 'video' || mode === 'keyframe';
+
     /* ---- Provider-bound image tool handlers ---- */
 
     const handleSplitImageLayers = async (element: ImageElement) => {
@@ -610,6 +612,11 @@ export function useGeneration(params: UseGenerationParams) {
         const effectiveGenerationMode = modeOverride ?? generationMode;
         const activeSelectedElementIds = selectedElementIdsOverride ?? selectedElementIds;
         const activeMentionedElementIds = mentionedElementIdsOverride ?? mentionedElementIds;
+
+        if (isDisabledGenerationMode(effectiveGenerationMode)) {
+            setError('视频生成已关闭。当前只支持图片生成。');
+            return;
+        }
 
         if (isAutoEnhanceEnabled && !promptOverride) {
             try {

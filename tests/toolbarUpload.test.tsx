@@ -5,7 +5,7 @@ import { render } from '@testing-library/react';
 import { Toolbar } from '../components/Toolbar';
 
 describe('Toolbar media upload', () => {
-  it('accepts both image and video files for Canva uploads', () => {
+  it('accepts image files for canvas uploads', () => {
     const { container } = render(
       <Toolbar
         t={(key) => key}
@@ -33,6 +33,6 @@ describe('Toolbar media upload', () => {
     );
 
     const input = container.querySelector('input[type="file"]') as HTMLInputElement | null;
-    expect(input?.accept).toBe('image/*,video/*');
+    expect(input?.accept).toBe('image/*');
   });
 });

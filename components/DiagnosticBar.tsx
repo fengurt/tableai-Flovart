@@ -6,7 +6,7 @@
  * 全部就绪时也显示完整文字，避免触屏用户看不到状态。
  */
 import React, { useMemo } from 'react';
-import type { UserApiKey, AICapability } from '../types';
+import type { UserApiKey } from '../types';
 import { diagnoseKeyCapabilities } from '../services/aiGateway';
 
 interface DiagnosticBarProps {
@@ -15,12 +15,11 @@ interface DiagnosticBarProps {
     onOpenSettings: () => void;
 }
 
-const CREATIVE_CAPABILITIES: AICapability[] = ['text', 'image', 'video'];
+const CREATIVE_CAPABILITIES: Array<'text' | 'image'> = ['text', 'image'];
 
-const CAP_LABELS: Record<'text' | 'image' | 'video', { label: string; icon: string }> = {
+const CAP_LABELS: Record<'text' | 'image', { label: string; icon: string }> = {
     text: { label: '提示词润色', icon: 'Aa' },
     image: { label: '图片生成', icon: 'Img' },
-    video: { label: '视频生成', icon: 'Vid' },
 };
 
 export const DiagnosticBar: React.FC<DiagnosticBarProps> = ({ userApiKeys, theme, onOpenSettings }) => {

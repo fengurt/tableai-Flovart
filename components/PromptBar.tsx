@@ -134,7 +134,7 @@ const MenuOptionButton: React.FC<{ label: string; active?: boolean; description?
     </button>
 );
 
-const isSupportedAttachment = (type: string) => type.startsWith('image/') || type.startsWith('video/');
+const isSupportedAttachment = (type: string) => type.startsWith('image/');
 
 export const PromptBar: React.FC<PromptBarProps> = ({
     t,
@@ -192,7 +192,7 @@ export const PromptBar: React.FC<PromptBarProps> = ({
     shellClassName,
     hideApiStatus = false,
     popoverDirection = 'up',
-    modeOptions = ['image', 'video', 'keyframe'],
+    modeOptions = ['image'],
 }) => {
     const isDark = theme === 'dark';
     const rootRef = useRef<HTMLDivElement>(null);
@@ -250,7 +250,7 @@ export const PromptBar: React.FC<PromptBarProps> = ({
         ? [`已选中 ${selectedElementCount} 个元素`, '描述“怎么改”比描述“是什么”更有效']
         : attachments.length > 0
             ? [`已添加 ${attachments.length} 个参考`, '可以继续输入 @ 引用画布元素']
-            : ['支持拖入图片/视频参考', '输入 @ 可引用画布元素'];
+            : ['支持拖入图片参考', '输入 @ 可引用画布元素'];
     const placeholder = useMemo(() => {
         if (!isSelectionActive) return '使用 @ 引用画布中的图片，例如：把 @图片1 的人物替换为 @图片2 的兔子';
         if (selectedElementCount === 1) return '描述你想对当前元素做什么';
@@ -370,11 +370,11 @@ export const PromptBar: React.FC<PromptBarProps> = ({
                 <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*"
                     multiple
                     className="hidden"
-                    title="上传参考媒体"
-                    aria-label="上传参考媒体"
+                    title="上传参考图"
+                    aria-label="上传参考图"
                     onChange={event => {
                         if (event.target.files?.length) {
                             handleDropFiles(event.target.files);
@@ -386,7 +386,7 @@ export const PromptBar: React.FC<PromptBarProps> = ({
                 {isDragActive && (
                     <div className="pointer-events-none absolute inset-3 z-20 rounded-[20px] border-[1.5px] border-dashed backdrop-blur-sm" style={{ borderColor: 'var(--isl-mint)', background: 'var(--isl-mint-bg)' }}>
                         <div className="flex h-full items-center justify-center">
-                            <div className="isl-chip px-4 py-2 text-sm">松手上传参考媒体</div>
+                            <div className="isl-chip px-4 py-2 text-sm">松手上传参考图</div>
                         </div>
                     </div>
                 )}
@@ -504,7 +504,7 @@ export const PromptBar: React.FC<PromptBarProps> = ({
                                             {getModeLabel(generationMode)}
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
                                         </button>
-                                        {expandedPanel === 'mode' && <div className={popoverCardClass}><PopoverHeader title="生成类型" subtitle="选择图片、视频或首尾帧模式" /><div className="space-y-1">{modeOptions.map(mode => <MenuOptionButton key={mode} label={getModeLabel(mode)} active={generationMode === mode} onClick={() => { setGenerationMode(mode); setExpandedPanel(null); }} />)}</div></div>}
+                                        {expandedPanel === 'mode' && <div className={popoverCardClass}><PopoverHeader title="生成类型" subtitle="当前只开放图片生成" /><div className="space-y-1">{modeOptions.map(mode => <MenuOptionButton key={mode} label={getModeLabel(mode)} active={generationMode === mode} onClick={() => { setGenerationMode(mode); setExpandedPanel(null); }} />)}</div></div>}
                                     </>
                                 ) : (
                                     <div className={`${triggerClass} cursor-default`}>
@@ -770,4 +770,3 @@ export const PromptBar: React.FC<PromptBarProps> = ({
         </div>
     );
 };
-

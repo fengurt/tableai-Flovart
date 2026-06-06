@@ -37,15 +37,20 @@ export interface ModelParamSchema {
     defaultAspectRatio?: VideoAspectRatio;
 }
 
+export const SUPPORTED_IMAGE_MODELS = ['gemini-3.1-flash-image-preview', 'gpt-image-2'] as const;
+export const DEFAULT_IMAGE_MODEL = SUPPORTED_IMAGE_MODELS[0];
+export const DISABLED_VIDEO_MODEL = '';
+const SUPPORTED_IMAGE_MODEL_SET = new Set<string>(SUPPORTED_IMAGE_MODELS);
+
 export const DEFAULT_PROVIDER_MODELS: Partial<Record<AIProvider, ProviderModelMap>> = {
     google: {
         text: ['gemini-3-flash-preview', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-2.5-pro', 'gemini-2.5-flash'],
-        image: ['gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview', 'gemini-2.5-flash-image', 'imagen-4.0-generate-001'],
-        video: ['veo-3.1-generate-preview', 'veo-3.1-lite-generate-preview', 'veo-2.0-generate-001'],
+        image: ['gemini-3.1-flash-image-preview'],
+        video: [],
     },
     openai: {
         text: ['gpt-5.4', 'gpt-5.4-mini', 'gpt-5.4-nano', 'gpt-4o-mini'],
-        image: ['gpt-image-1', 'dall-e-3'],
+        image: ['gpt-image-2'],
         video: [],
     },
     anthropic: {
@@ -85,13 +90,13 @@ export const DEFAULT_PROVIDER_MODELS: Partial<Record<AIProvider, ProviderModelMa
     },
     runningHub: {
         text: [],
-        image: ['rhart-image-n-pro-official'],
+        image: [],
         video: [],
     },
     minimax: {
         text: ['MiniMax-Text-01', 'abab6.5s-chat'],
-        image: ['minimax-image-01'],
-        video: ['video-01'],
+        image: [],
+        video: [],
     },
     volcengine: {
         text: ['doubao-1.5-pro-256k', 'doubao-1.5-pro-32k'],
@@ -100,7 +105,7 @@ export const DEFAULT_PROVIDER_MODELS: Partial<Record<AIProvider, ProviderModelMa
     },
     openrouter: {
         text: ['openrouter/auto', 'google/gemini-3-flash-preview', 'anthropic/claude-opus-4-6', 'deepseek/deepseek-r1'],
-        image: ['openai/gpt-image-1', 'google/imagen-4.0-generate-001'],
+        image: [],
         video: [],
     },
     openai_compatible: {
@@ -375,6 +380,10 @@ function stripModelProviderPrefix(model: string): string {
     return parts.length > 1 ? parts.slice(1).join('/') : normalized;
 }
 
+export function isSupportedImageGenerationModel(model: string): boolean {
+    return SUPPORTED_IMAGE_MODEL_SET.has(normalizeModelName(model));
+}
+
 export function inferCapabilityFromModel(model: string): AICapability | undefined {
     const normalized = stripModelProviderPrefix(model);
     if (!normalized) return undefined;
@@ -519,7 +528,7 @@ export function isGoogleTextToImageModel(model: string): boolean {
 
 function isOpenAIImageEditModel(model: string): boolean {
     const normalized = normalizeModelName(model).replace(/^openai\//, '');
-    return /^(gpt-image-1(?:\.5|-mini)?|gpt-image-1)$/.test(normalized);
+    return /^(gpt-image-2|gpt-image-1(?:\.5|-mini)?|gpt-image-1)$/.test(normalized);
 }
 
 export function supportsReferenceImageEditing(model: string): boolean {
@@ -717,7 +726,7 @@ function inferPromptModeHint(request: PromptEnhanceRequest) {
     };
 
     return [
-        'You are a professional prompt engineer for image and video generation.',
+        'You are a professional prompt engineer for image generation.',
         'Return ONLY valid JSON with keys: enhancedPrompt, negativePrompt, suggestions, notes.',
         'Keep enhancedPrompt concise but vivid. Do not use markdown.',
         'negativePrompt should be a comma-separated phrase list.',
@@ -1392,11 +1401,16 @@ export async function generateImageWithProvider(
     model: string,
     key?: UserApiKey
 ): Promise<{ newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null }> {
+    if (!isSupportedImageGenerationModel(model)) {
+        throw new Error(`不支持的图片模型：${model}。当前只支持 ${SUPPORTED_IMAGE_MODELS.join('、')}。`);
+    }
+
     const provider = resolveGenerationProvider(model, key);
 
     if (provider === 'google') {
-        // 传入 key?.key 确保使用用户 UI 中配置的 API Key
-        return generateImageFromText(prompt, key?.key);
+        return isGoogleImageEditModel(model)
+            ? editImage([], prompt, undefined, key?.key)
+            : generateImageFromText(prompt, key?.key);
     }
 
     if (provider === 'openrouter') {
@@ -1668,6 +1682,8 @@ export async function generateVideoWithProvider(
         image?: ImageInput;
     },
 ): Promise<{ videoBlob: Blob; mimeType: string }> {
+    throw new Error('视频生成已关闭。当前只支持图片生成。');
+
     const provider = resolveGenerationProvider(model, key);
     const onProgress = options?.onProgress || (() => {});
     const aspectRatio = options?.aspectRatio || '16:9';
@@ -1871,18 +1887,7 @@ export async function executeUnifiedIgnition(input: UnifiedIgnitionInput): Promi
 
     try {
         if (capability === 'video') {
-            const firstFrameReference = input.references?.find(reference => reference.type === 'image' && reference.slotRole === 'first_frame')
-                || input.references?.find(reference => reference.type === 'image');
-            const firstFrame = firstFrameReference?.href
-                ? { href: firstFrameReference.href, mimeType: firstFrameReference.mimeType || 'image/png' }
-                : undefined;
-            const result = await generateVideoWithProvider(prompt, input.modelId, input.apiKeyPayload, {
-                aspectRatio: input.aspectRatio || getDynamicParamSchema(input.modelId).defaultAspectRatio || '16:9',
-                image: firstFrame,
-                onProgress: message => input.onProgress?.(35, message),
-            });
-            const mediaUrl = URL.createObjectURL(result.videoBlob);
-            return { ok: true, elementId: input.elementId, mediaUrl, mimeType: result.mimeType, capability };
+            return { ok: false, elementId: input.elementId, capability, errorMessage: '视频生成已关闭。当前只支持图片生成。' };
         }
 
         const imageReferences = getImageReferencesForIgnition(input.references);
@@ -2037,7 +2042,7 @@ export function diagnoseKeyCapabilities(keys: UserApiKey[]): {
     missing: AICapability[];
     warnings: string[];
 } {
-    const ALL_CAPS: AICapability[] = ['text', 'image', 'video'];
+    const ALL_CAPS: AICapability[] = ['text', 'image'];
     const coveredSet = new Set<AICapability>();
     const warnings: string[] = [];
 
@@ -2051,12 +2056,11 @@ export function diagnoseKeyCapabilities(keys: UserApiKey[]): {
 
     if (missing.includes('text')) warnings.push('未配置文本模型 API Key — 提示词润色、AI 对话功能不可用');
     if (missing.includes('image')) warnings.push('未配置图片模型 API Key — AI 绘图、图片编辑功能不可用');
-    if (missing.includes('video')) warnings.push('未配置视频模型 API Key — AI 视频生成功能不可用');
 
     // 检查是否有 Google key (核心能力依赖)
     const hasGoogle = keys.some(k => k.provider === 'google' && k.key);
     if (!hasGoogle && keys.length > 0) {
-        warnings.push('建议配置 Google API Key — Gemini 3 / Imagen 4 / Veo 3.1 是当前最强图像和视频模型');
+        warnings.push('建议配置 Google API Key — Gemini 3.1 Flash Image 是当前支持的核心图像模型');
     }
 
     if (keys.length === 0) {
@@ -2103,13 +2107,6 @@ export function explainKeyCapabilities(keys: UserApiKey[]): CapabilityStatus[] {
             reason: covered.has('image')
                 ? '至少一个图片模型 Key 可用。'
                 : '未找到图片模型 Key — AI 绘图、图片编辑不可用。',
-        },
-        {
-            capability: 'video',
-            supported: covered.has('video'),
-            reason: covered.has('video')
-                ? '至少一个视频模型 Key 可用。'
-                : '未找到视频模型 Key — AI 视频生成不可用。',
         },
     ];
 }

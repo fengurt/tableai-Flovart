@@ -26,7 +26,7 @@ const ABCompareOverlay = React.lazy(() => import('./components/ABCompareOverlay'
 const NodeWorkflowPanel = React.lazy(() => import('./components/NodeWorkflowPanel').then(m => ({ default: m.NodeWorkflowPanel })));
 import { loadAssetLibrary, addAsset, removeAsset, renameAsset, loadAssetLibraryAsync, saveAssetLibraryAsync } from './utils/assetStorage';
 import { loadGenerationHistoryAsync, saveGenerationHistoryAsync } from './utils/generationHistory';
-import { inferProviderFromModel, reversePromptStreamWithProvider, DEFAULT_PROVIDER_MODELS, generateImageWithProvider, generateVideoWithProvider, inferCapabilityFromModelName } from './services/aiGateway';
+import { inferProviderFromModel, reversePromptStreamWithProvider, DEFAULT_PROVIDER_MODELS, generateImageWithProvider, inferCapabilityFromModelName } from './services/aiGateway';
 import { fileToDataUrl, validateAndResizeImage } from './utils/fileUtils';
 import { translations } from './utils/translations';
 // keyVault imports moved to hooks/useApiKeys.ts
@@ -1007,10 +1007,6 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
     }, [addPromptAttachment]);
 
     const readAttachmentFile = useCallback(async (file: File) => {
-        if (file.type.startsWith('video/')) {
-            const { dataUrl, mimeType } = await fileToDataUrl(file);
-            return { dataUrl, mimeType: mimeType || 'video/mp4', resized: false };
-        }
         return validateAndResizeImage(file);
     }, []);
 
@@ -1021,7 +1017,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
     }, []);
 
     const handleAddAttachmentFiles = useCallback(async (files: FileList | File[]) => {
-        const list = Array.from(files).filter(file => file.type.startsWith('image/') || file.type.startsWith('video/'));
+        const list = Array.from(files).filter(file => file.type.startsWith('image/'));
         if (list.length === 0) return;
         try {
             const results = await Promise.all(list.map(f => readAttachmentFile(f)));
@@ -1045,7 +1041,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
     }, [addChatAttachment, offloadAttachmentDataUrl, readAttachmentFile, toast]);
 
     const handleAddPromptAttachmentFiles = useCallback(async (files: FileList | File[]) => {
-        const list = Array.from(files).filter(file => file.type.startsWith('image/') || file.type.startsWith('video/'));
+        const list = Array.from(files).filter(file => file.type.startsWith('image/'));
         if (list.length === 0) return;
         try {
             const results = await Promise.all(list.map(f => readAttachmentFile(f)));
@@ -1339,12 +1335,8 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
     }, [getCanvasPoint, readLocalVideoMetadata, setElements]);
 
     const handleAddMediaElement = useCallback((file: File) => {
-        if (file.type.startsWith('video/')) {
-            void handleAddVideoElement(file);
-            return;
-        }
         void handleAddImageElement(file);
-    }, [handleAddImageElement, handleAddVideoElement]);
+    }, [handleAddImageElement]);
 
     // Chrome Extension bridge: pick up pending images/prompts sent from context menu or popup
     useEffect(() => {
@@ -1860,7 +1852,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
     useEffect(() => {
         const handlePaste = (e: ClipboardEvent) => {
             const file = e.clipboardData?.files[0];
-            if (file && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+            if (file && file.type.startsWith('image/')) {
                 e.preventDefault();
                 handleAddMediaElement(file);
             }
@@ -2040,12 +2032,11 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
             ok: true,
             configured: {
                 image: !!getPreferredApiKey('image'),
-                video: !!getPreferredApiKey('video'),
+                video: false,
                 text: !!getPreferredApiKey('text'),
             },
             selectedModels: {
                 image: modelPreference.imageModel,
-                video: modelPreference.videoModel,
                 text: modelPreference.textModel,
             },
             availableModels: dynamicModelOptions,
@@ -2340,7 +2331,10 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
         };
 
         const resolveRuntimeModelKey = (capability: 'image' | 'video') => {
-            const model = capability === 'image' ? modelPreference.imageModel : modelPreference.videoModel;
+            if (capability === 'video') {
+                throw new Error('UNSUPPORTED_CAPABILITY: video generation is disabled');
+            }
+            const model = modelPreference.imageModel;
             const provider = inferProviderFromModel(model);
             const key = getPreferredApiKey(capability, provider);
             if (!key) {
@@ -2394,49 +2388,8 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
             }
         };
 
-        const loadVideoSize = (href: string, fallbackWidth = 960, fallbackHeight = 540) => new Promise<{ width: number; height: number; durationSec?: number }>((resolve) => {
-            const video = document.createElement('video');
-            video.preload = 'metadata';
-            video.onloadedmetadata = () => resolve({
-                width: video.videoWidth || fallbackWidth,
-                height: video.videoHeight || fallbackHeight,
-                durationSec: Number.isFinite(video.duration) ? video.duration : undefined,
-            });
-            video.onerror = () => resolve({ width: fallbackWidth, height: fallbackHeight });
-            video.src = href;
-        });
-
-        const placeGeneratedVideo = async (input: { prompt: string; sourceImageIds?: string[]; aspectRatio?: string }) => {
-            const { model, key } = resolveRuntimeModelKey('video');
-            const sourceImage = input.sourceImageIds?.length
-                ? elementsRef.current.find(el => el.id === input.sourceImageIds?.[0] && el.type === 'image') as ImageElement | undefined
-                : undefined;
-            setIsLoading(true);
-            setError(null);
-            setProgressMessage('Agent video generation...');
-            try {
-                const result = await generateVideoWithProvider(input.prompt, model, key, {
-                    aspectRatio: (input.aspectRatio || videoAspectRatio) as typeof videoAspectRatio,
-                    onProgress: message => setProgressMessage(message),
-                    image: sourceImage ? { href: sourceImage.href, mimeType: sourceImage.mimeType } : undefined,
-                });
-                const href = URL.createObjectURL(result.videoBlob);
-                const size = await loadVideoSize(href);
-                const placed = addMediaElement({
-                    type: 'video',
-                    href,
-                    mimeType: result.mimeType,
-                    width: size.width,
-                    height: size.height,
-                    durationSec: size.durationSec,
-                    name: 'Agent Video',
-                    sourceKind: 'generation',
-                }, 'video');
-                return { ...placed, prompt: input.prompt, model, sourceImageId: sourceImage?.id };
-            } finally {
-                setIsLoading(false);
-                setTimeout(() => setProgressMessage(''), 1500);
-            }
+        const placeGeneratedVideo = async () => {
+            throw new Error('UNSUPPORTED_CAPABILITY: video generation is disabled');
         };
 
         const executeRuntimeCommand = async (command: string, args: any): Promise<unknown> => {
@@ -2485,7 +2438,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                 case 'generate.imagesBatch':
                     return api.generate.imagesBatch(args);
                 case 'generate.video':
-                    return api.generate.video(args);
+                    throw new Error('UNSUPPORTED_CAPABILITY: video generation is disabled');
                 default:
                     throw new Error(`BAD_REQUEST: unknown command ${command}`);
             }
@@ -2582,7 +2535,6 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                     setModelPreference(prev => ({
                         ...prev,
                         imageModel: input?.imageModel || prev.imageModel,
-                        videoModel: input?.videoModel || prev.videoModel,
                         textModel: input?.textModel || prev.textModel,
                     }));
                     return { ok: true, selectedModels: input || {} };
@@ -2751,7 +2703,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                     return { ok: results.every(item => item.ok), items: results };
                 },
                 video: async (input: { prompt: string; sourceImageIds?: string[]; aspectRatio?: string }) => {
-                    return placeGeneratedVideo(input);
+                    throw new Error('UNSUPPORTED_CAPABILITY: video generation is disabled');
                 },
                 videoStatus: (input: { jobId: string }) => api.command.get(input.jobId),
             },
@@ -3095,11 +3047,6 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                     const runtimeApi = getFlovartRuntimeApi();
                     const result = await runtimeApi?.generate?.image?.({ prompt, name });
                     if (!result || !result.id) throw new Error(getRuntimeErrorMessage(result, 'Agent image generation failed'));
-                }}
-                onCreateVideo={async (prompt, sourceImageIds) => {
-                    const runtimeApi = getFlovartRuntimeApi();
-                    const result = await runtimeApi?.generate?.video?.({ prompt, sourceImageIds });
-                    if (!result || !result.id) throw new Error(getRuntimeErrorMessage(result, 'Agent video generation failed'));
                 }}
                 runtimeStage={progressMessage}
                 runtimeJobs={Object.values(runtimeJobsRef.current)

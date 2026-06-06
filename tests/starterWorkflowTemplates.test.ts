@@ -9,12 +9,9 @@ describe('STARTER_WORKFLOW_TEMPLATES', () => {
     expect(template?.edges).toEqual([]);
   });
 
-  it('exports the minimal video starter flow for prompt-to-video onboarding', () => {
+  it('does not export a video starter flow', () => {
     const template = STARTER_WORKFLOW_TEMPLATES.find((item) => item.id === 'starter-video-flow');
 
-    expect(template?.nodes.map((node) => node.kind)).toEqual(['imageGen', 'videoGen']);
-    expect(template?.edges.map((edge) => `${edge.fromNode}:${edge.fromPort}->${edge.toNode}:${edge.toPort}`)).toEqual([
-      'starter_image:image->starter_video:image',
-    ]);
+    expect(template).toBeUndefined();
   });
 });

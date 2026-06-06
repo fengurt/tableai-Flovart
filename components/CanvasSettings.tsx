@@ -2,6 +2,9 @@ import React from 'react';
 import type { WheelAction, UserApiKey, ModelPreference, AIProvider, AICapability, ThemeMode, ModelItem } from '../types';
 import {
     DEFAULT_PROVIDER_MODELS,
+    DEFAULT_IMAGE_MODEL,
+    DISABLED_VIDEO_MODEL,
+    SUPPORTED_IMAGE_MODELS,
     validateApiKey,
     inferProviderFromKey,
     inferCapabilitiesByProvider,
@@ -63,7 +66,7 @@ const capabilityLabels: Record<AICapability, string> = {
     agent: 'Agent',
 };
 
-const CREATIVE_CAPABILITIES: AICapability[] = ['text', 'image', 'video'];
+const CREATIVE_CAPABILITIES: AICapability[] = ['text', 'image'];
 
 type ProviderPreset = {
     id: string;
@@ -89,10 +92,25 @@ const PROVIDER_PRESETS: ProviderPreset[] = [
         provider: 'custom',
         websiteUrl: '',
         baseUrl: '',
-        capabilities: ['text', 'image'],
+        capabilities: ['image'],
         requestFormat: 'openai',
         authHeaderName: 'Authorization',
         authScheme: 'Bearer',
+        defaultModel: DEFAULT_IMAGE_MODEL,
+        models: [...SUPPORTED_IMAGE_MODELS],
+        featured: true,
+    },
+    {
+        id: 'openai',
+        name: 'OpenAI Official',
+        shortName: 'OA',
+        provider: 'openai',
+        websiteUrl: 'https://platform.openai.com',
+        baseUrl: providerBaseUrl.openai,
+        capabilities: ['image'],
+        requestFormat: 'openai',
+        defaultModel: 'gpt-image-2',
+        models: ['gpt-image-2'],
         featured: true,
     },
     {
@@ -128,11 +146,10 @@ const PROVIDER_PRESETS: ProviderPreset[] = [
         provider: 'openrouter',
         websiteUrl: 'https://openrouter.ai',
         baseUrl: providerBaseUrl.openrouter,
-        capabilities: ['text', 'image'],
+        capabilities: ['text'],
         requestFormat: 'openai',
         defaultModel: 'openrouter/auto',
-        models: ['openrouter/auto', 'anthropic/claude-sonnet-4-6', 'openai/gpt-image-1', 'google/gemini-3-flash-preview'],
-        featured: true,
+        models: ['openrouter/auto', 'anthropic/claude-sonnet-4-6', 'google/gemini-3-flash-preview'],
     },
     {
         id: 'siliconflow',
@@ -141,7 +158,7 @@ const PROVIDER_PRESETS: ProviderPreset[] = [
         provider: 'siliconflow',
         websiteUrl: 'https://siliconflow.cn',
         baseUrl: providerBaseUrl.siliconflow,
-        capabilities: ['text', 'image'],
+        capabilities: ['text'],
         requestFormat: 'openai',
         defaultModel: 'deepseek-ai/DeepSeek-V3',
         models: ['deepseek-ai/DeepSeek-V3', 'Qwen/Qwen2.5-72B-Instruct'],
@@ -153,10 +170,11 @@ const PROVIDER_PRESETS: ProviderPreset[] = [
         provider: 'google',
         websiteUrl: 'https://aistudio.google.com',
         baseUrl: providerBaseUrl.google,
-        capabilities: ['text', 'image', 'video'],
+        capabilities: ['image'],
         requestFormat: 'google',
-        defaultModel: 'gemini-3-flash-preview',
-        models: ['gemini-3-flash-preview', 'gemini-3.1-flash-image-preview', 'veo-3.1-generate-preview'],
+        defaultModel: DEFAULT_IMAGE_MODEL,
+        models: [DEFAULT_IMAGE_MODEL],
+        featured: true,
     },
 ];
 
@@ -194,7 +212,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
     const [baseUrl, setBaseUrl] = React.useState(providerBaseUrl.google);
     const [displayName, setDisplayName] = React.useState('');
     const [showKey, setShowKey] = React.useState(false);
-    const [capabilities, setCapabilities] = React.useState<AICapability[]>(['text', 'image', 'video']);
+    const [capabilities, setCapabilities] = React.useState<AICapability[]>(['image']);
     const [isValidating, setIsValidating] = React.useState(false);
     const [validationResult, setValidationResult] = React.useState<Awaited<ReturnType<typeof validateApiKey>> | null>(null);
     // 当前正在编辑的 API Key（null = 新增模式）
@@ -228,18 +246,13 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
             modelPreference.textModel
         ),
         image: ensureModelOption(
-            dynamicModelOptions?.image?.length ? dynamicModelOptions.image : [
-                ...(DEFAULT_PROVIDER_MODELS.google?.image || []),
-            ],
-            modelPreference.imageModel
+            dynamicModelOptions?.image?.length ? dynamicModelOptions.image : [...SUPPORTED_IMAGE_MODELS],
+            SUPPORTED_IMAGE_MODELS.includes(modelPreference.imageModel as typeof SUPPORTED_IMAGE_MODELS[number])
+                ? modelPreference.imageModel
+                : DEFAULT_IMAGE_MODEL
         ),
-        video: ensureModelOption(
-            dynamicModelOptions?.video?.length ? dynamicModelOptions.video : [
-                ...(DEFAULT_PROVIDER_MODELS.google?.video || []),
-            ],
-            modelPreference.videoModel
-        ),
-    }), [dynamicModelOptions, modelPreference.imageModel, modelPreference.textModel, modelPreference.videoModel]);
+        video: [],
+    }), [dynamicModelOptions, modelPreference.imageModel, modelPreference.textModel]);
 
     if (!isOpen) return null;
 
@@ -301,7 +314,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
         }
         setProvider(next);
         setBaseUrl(providerBaseUrl[next]);
-        setCapabilities(inferCapabilitiesByProvider(next));
+            setCapabilities(inferCapabilitiesByProvider(next).filter(capability => capability !== 'video'));
         setExtraConfig(prev => ({
             ...prev,
             requestFormat: next === 'anthropic' ? 'anthropic' : next === 'google' ? 'google' : 'openai',
@@ -317,7 +330,6 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
             const models: ModelItem[] = [
                 ...(pm.text || []).map(id => ({ id, name: id })),
                 ...(pm.image || []).map(id => ({ id, name: id })),
-                ...(pm.video || []).map(id => ({ id, name: id })),
                 ...(pm.agent || []).map(id => ({ id, name: id })),
             ];
             setEditModels(models);
@@ -416,7 +428,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
         setApiKey(item.key);
         setBaseUrl(item.baseUrl || providerBaseUrl[item.provider]);
         setDisplayName(item.name || '');
-        setCapabilities(item.capabilities?.length ? [...item.capabilities] : inferCapabilitiesByProvider(item.provider));
+        setCapabilities((item.capabilities?.length ? [...item.capabilities] : inferCapabilitiesByProvider(item.provider)).filter(capability => capability !== 'video'));
         setEditModels(item.models || (item.customModels || []).map(id => ({ id, name: id })));
         setEditDefaultModel(item.defaultModel || '');
         setExtraConfig(item.extraConfig || {});
@@ -462,20 +474,25 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
         try {
             const result = await fetchModelsForProvider(fetchProvider, targetKey.trim(), targetBaseUrl?.trim() || undefined);
             if (result.ok && result.models.length > 0) {
-                setFetchedModels(result.models);
+                const allowedModels = result.models.filter(model => {
+                    if (model.capability === 'video') return false;
+                    if (model.capability === 'image') return (SUPPORTED_IMAGE_MODELS as readonly string[]).includes(model.id);
+                    return capabilities.includes(model.capability);
+                });
+                setFetchedModels(allowedModels);
                 setEndpointFlavor(result.endpointFlavor || null);
-                setDetectedCapabilities(result.capabilitySummary || []);
+                setDetectedCapabilities((result.capabilitySummary || []).filter(capability => capability !== 'video'));
                 if (result.effectiveBaseUrl) {
                     setBaseUrl(result.effectiveBaseUrl);
                 }
                 // 自动填充到编辑模型列表
-                const modelItems: ModelItem[] = result.models.map(m => ({ id: m.id, name: m.name || m.id }));
+                const modelItems: ModelItem[] = allowedModels.map(m => ({ id: m.id, name: m.name || m.id }));
                 setEditModels(modelItems);
                 if (modelItems.length > 0) setEditDefaultModel(modelItems[0].id);
                 // 自动推断 capabilities
                 const caps = new Set<AICapability>();
-                for (const m of result.models) caps.add(m.capability);
-                if (caps.size > 0) setCapabilities(Array.from(caps));
+                for (const m of allowedModels) caps.add(m.capability);
+                if (caps.size > 0) setCapabilities(Array.from(caps).filter(capability => capability !== 'video'));
                 if (result.endpointFlavor) {
                     setExtraConfig(prev => ({ ...prev, endpointFlavor: result.endpointFlavor }));
                 }
@@ -573,7 +590,7 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                     if (!item.provider || !item.key || item.key === '***') continue;
                     onAddApiKey({
                         provider: item.provider,
-                        capabilities: item.capabilities || inferCapabilitiesByProvider(item.provider),
+                        capabilities: (item.capabilities || inferCapabilitiesByProvider(item.provider)).filter((capability: AICapability) => capability !== 'video'),
                         key: item.key,
                         baseUrl: item.baseUrl,
                         name: item.name,
@@ -928,21 +945,9 @@ export const CanvasSettings: React.FC<CanvasSettingsProps> = ({
                         </div>
                         <div className="grid gap-3 md:grid-cols-2">
                             <label className={`rounded-2xl p-3 ${isDark ? 'bg-[#161A22]' : 'bg-[#F8FAFC]'}`}>
-                                <div className={`mb-2 text-sm font-medium ${isDark ? 'text-[#D0D5DD]' : 'text-[#344054]'}`}>LLM 润色模型</div>
-                                <select value={modelPreference.textModel} onChange={(event) => setModelPreference({ ...modelPreference, textModel: event.target.value })} className={`${inputClass} flv-safe-input`}>
-                                    {modelOptions.text.map(model => <option key={model} value={model}>{model}</option>)}
-                                </select>
-                            </label>
-                            <label className={`rounded-2xl p-3 ${isDark ? 'bg-[#161A22]' : 'bg-[#F8FAFC]'}`}>
                                 <div className={`mb-2 text-sm font-medium ${isDark ? 'text-[#D0D5DD]' : 'text-[#344054]'}`}>图片模型</div>
-                                <select value={modelPreference.imageModel} onChange={(event) => setModelPreference({ ...modelPreference, imageModel: event.target.value })} className={`${inputClass} flv-safe-input`}>
+                                <select value={modelPreference.imageModel} onChange={(event) => setModelPreference({ ...modelPreference, imageModel: event.target.value, videoModel: DISABLED_VIDEO_MODEL })} className={`${inputClass} flv-safe-input`}>
                                     {modelOptions.image.map(model => <option key={model} value={model}>{model}</option>)}
-                                </select>
-                            </label>
-                            <label className={`rounded-2xl p-3 ${isDark ? 'bg-[#161A22]' : 'bg-[#F8FAFC]'}`}>
-                                <div className={`mb-2 text-sm font-medium ${isDark ? 'text-[#D0D5DD]' : 'text-[#344054]'}`}>视频模型</div>
-                                <select value={modelPreference.videoModel} onChange={(event) => setModelPreference({ ...modelPreference, videoModel: event.target.value })} className={`${inputClass} flv-safe-input`}>
-                                    {modelOptions.video.map(model => <option key={model} value={model}>{model}</option>)}
                                 </select>
                             </label>
                         </div>

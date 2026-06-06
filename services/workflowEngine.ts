@@ -361,7 +361,7 @@ async function executeImageGen(
     return { image: refImage };
   }
   const provider = (node.config?.provider as AIProvider) || 'google';
-  const model = node.config?.model || (provider === 'openrouter' ? 'google/gemini-3.1-flash-image-preview' : provider === 'openai' ? 'gpt-image-1' : 'gemini-3.1-flash-image-preview');
+  const model = node.config?.model || (provider === 'openrouter' ? 'google/gemini-3.1-flash-image-preview' : provider === 'openai' ? 'gpt-image-2' : 'gemini-3.1-flash-image-preview');
   const key = resolveNodeApiKey(ctx.apiKeys, node.config, provider);
   if (!key) {
     throw new Error(node.config?.apiKeyRef ? '未找到节点绑定的 API Key' : `未找到 ${provider} 的 API Key`);
@@ -430,37 +430,14 @@ async function executeImageGen(
 async function executeVideoGen(
   node: WorkflowNode,
   inputs: NodeIOMap,
-  ctx: ExecutionContext,
+  _ctx: ExecutionContext,
 ): Promise<NodeIOMap> {
-  const prompt = getTextInput(inputs, 'text', 'input') || node.config?.prompt || '';
-  const firstFrame = getImageInput(inputs, 'image', 'input') || getConfigImageMedia(node.config);
   const localVideo = getConfigVideoMedia(node.config);
-  if (!prompt.trim()) {
+  const prompt = getTextInput(inputs, 'text', 'input') || node.config?.prompt || '';
+  if (!prompt.trim() && localVideo) {
     return { video: localVideo };
   }
-  const provider = (node.config?.provider as AIProvider) || 'google';
-  const model = node.config?.model || (provider === 'minimax' ? 'video-01' : 'veo-3.1-generate-preview');
-  const key = resolveNodeApiKey(ctx.apiKeys, node.config, provider, 'google', 'minimax', 'keling');
-  if (!key) {
-    throw new Error(node.config?.apiKeyRef ? '未找到节点绑定的 API Key' : '未找到视频生成的 API Key');
-  }
-
-  const { generateVideoWithProvider } = await import('../services/aiGateway');
-  const result = await generateVideoWithProvider(
-    prompt,
-    model,
-    key,
-    {
-      onProgress: (status) => ctx.onProgress?.(node.id, status),
-      aspectRatio: getSupportedVideoAspectRatio(node.config?.aspectRatio),
-      image: firstFrame ? { href: firstFrame.href, mimeType: firstFrame.mimeType } : undefined,
-    },
-  );
-  if (result?.videoBlob) {
-    const videoUrl = URL.createObjectURL(result.videoBlob);
-    return { video: videoValue(videoUrl, result.videoBlob.type || 'video/mp4') };
-  }
-  return { video: null };
+  throw new Error('视频生成已关闭。当前只支持图片生成。');
 }
 
 function executeVideoEdit(

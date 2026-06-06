@@ -164,7 +164,6 @@ const SAVED_WORKFLOWS_STORAGE_KEY = 'flovart.savedWorkflows.v1';
 
 const NODE_LIBRARY_KINDS: NodeKind[] = [
   'imageGen',
-  'videoGen',
 ];
 
 const NODE_LIBRARY_LABELS: Partial<Record<NodeKind, string>> = {
@@ -296,7 +295,6 @@ const TEMPLATE_FILTER_OPTIONS: Array<{
 }> = [
   { value: 'all', label: 'All' },
   { value: 'image', label: 'Image' },
-  { value: 'video', label: 'Video' },
   { value: 'utility', label: 'Utility' },
 ];
 
@@ -1651,23 +1649,6 @@ export const NodeWorkflowPanel: React.FC<NodeWorkflowPanelProps> = ({
 
     return (
       <div className="workflow-node-runtime-controls mb-2 space-y-1.5 rounded-lg border p-2">
-        {node.kind === 'generator' && (
-          <div className="grid grid-cols-2 gap-1">
-            {(['image', 'video'] as const).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                className={joinClasses('rounded-md px-2 py-1 text-[10px] font-semibold', getNodeGenerationMode(node) === mode && 'is-active')}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateNodeGenerationMode(node, mode);
-                }}
-              >
-                {mode === 'video' ? 'Video' : 'Image'}
-              </button>
-            ))}
-          </div>
-        )}
         {canChooseModel && (
           <select
             value={node.config?.model || ''}
@@ -1949,8 +1930,7 @@ export const NodeWorkflowPanel: React.FC<NodeWorkflowPanelProps> = ({
 
     const files = Array.from(fileList);
     const file = files.find((item) => {
-      if (node.kind === 'imageGen') return item.type.startsWith('image/');
-      return item.type.startsWith('image/') || item.type.startsWith('video/');
+      return item.type.startsWith('image/');
     });
     if (!file) return;
 
@@ -1988,25 +1968,23 @@ export const NodeWorkflowPanel: React.FC<NodeWorkflowPanelProps> = ({
   };
 
   const createSourceNodesFromFiles = async (files: FileList | File[], world: { x: number; y: number }) => {
-    const mediaFiles = Array.from(files).filter(file => file.type.startsWith('image/') || file.type.startsWith('video/'));
+    const mediaFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
     if (mediaFiles.length === 0) return false;
 
     for (const [index, file] of mediaFiles.entries()) {
-      const isVideo = file.type.startsWith('video/');
       const href = await readFileAsDataUrl(file);
-      const mediaMeta = isVideo ? await readVideoMetadata(href) : await readImageDimensions(href);
-      store.addNode(isVideo ? 'loadVideo' : 'loadImage', {
+      const mediaMeta = await readImageDimensions(href);
+      store.addNode('loadImage', {
         x: world.x + index * 320,
         y: world.y + (index % 2) * 180,
       }, {
-        label: file.name || (isVideo ? 'Video Input' : 'Image Input'),
-        mediaKind: isVideo ? 'video' : 'image',
+        label: file.name || 'Image Input',
+        mediaKind: 'image',
         mediaHref: href,
-        mediaMimeType: file.type || (isVideo ? 'video/mp4' : 'image/png'),
+        mediaMimeType: file.type || 'image/png',
         mediaName: file.name,
         mediaWidth: mediaMeta.width,
         mediaHeight: mediaMeta.height,
-        mediaDurationSec: isVideo ? (mediaMeta as { durationSec?: number }).durationSec : undefined,
       });
     }
     setRunMessage(`Created ${mediaFiles.length} source node${mediaFiles.length > 1 ? 's' : ''} from dropped media.`);
@@ -2149,8 +2127,6 @@ export const NodeWorkflowPanel: React.FC<NodeWorkflowPanelProps> = ({
       store.addNode('prompt', at);
     } else if (action === 'add-load-image') {
       store.addNode('loadImage', at);
-    } else if (action === 'add-load-video') {
-      store.addNode('loadVideo', at);
     } else if (action === 'add-enhancer') {
       store.addNode('enhancer', at);
     } else if (action === 'add-llm') {
@@ -2161,10 +2137,6 @@ export const NodeWorkflowPanel: React.FC<NodeWorkflowPanelProps> = ({
       store.addNode('generator', at);
     } else if (action === 'add-image-gen') {
       store.addNode('imageGen', at);
-    } else if (action === 'add-video-gen') {
-      store.addNode('videoGen', at);
-    } else if (action === 'add-video-edit') {
-      store.addNode('videoEdit', at);
     } else if (action === 'add-runninghub') {
       store.addNode('runningHub', at);
     } else if (action === 'add-preview') {
@@ -2226,7 +2198,6 @@ export const NodeWorkflowPanel: React.FC<NodeWorkflowPanelProps> = ({
   const getConnectionMenuOptions = (menu: ConnectionMenuState): ChainNodeOption[] => {
     const options: ChainNodeOption[] = [
       { id: 'image', label: 'Image', badge: 'IMG', kind: 'imageGen' },
-      { id: 'video', label: 'Video', badge: 'VID', kind: 'videoGen' },
     ];
     return options.map((option) => (
       option.kind && !canCreateConnectedNode(menu, option.kind)
@@ -3819,7 +3790,7 @@ export const NodeWorkflowPanel: React.FC<NodeWorkflowPanelProps> = ({
       <input
         ref={nodeMediaInputRef}
         type="file"
-        accept="image/*,video/*"
+      accept="image/*"
         className="hidden"
         data-testid="workflow-node-media-input"
         title="Upload media to selected node"

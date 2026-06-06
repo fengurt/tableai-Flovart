@@ -9,7 +9,6 @@ interface AgentChatPanelProps {
     compactMode: boolean;
     generationHistory: GenerationHistoryItem[];
     onCreateImage?: (prompt: string, name?: string) => Promise<void>;
-    onCreateVideo?: (prompt: string, sourceImageIds?: string[]) => Promise<void>;
     runtimeStage?: string;
     runtimeJobs?: RuntimeJobSnapshot[];
 }
@@ -38,7 +37,7 @@ const panelCopy = {
     zho: {
         eyebrow: 'Agent Chat',
         title: 'Agent 对话',
-        subtitle: '一句话描述需求，我会创建图层、写入提示词并开始生成。',
+        subtitle: '一句话描述需求，我会创建图片图层、写入提示词并开始生成。',
         initial: '我准备好了。直接告诉我你想做什么，越具体越好。',
         agentFailed: '任务执行失败。',
         noHistory: '还没有生成历史。',
@@ -52,14 +51,12 @@ const panelCopy = {
         exec: '执行',
         run: '执行中',
         imageStarted: '图片任务已开始。完成后会出现在历史记录里。',
-        videoStarted: '视频任务已开始。完成后会出现在历史记录里。',
         imageSteps: ['创建图片图层', '写入增强后的提示词', '启动当前图片模型'],
-        videoSteps: ['创建视频图层', '写入增强后的提示词', '启动当前视频模型'],
     },
     en: {
         eyebrow: 'Agent Chat',
         title: 'Agent Chat',
-        subtitle: 'Describe the outcome once. I will create the layer, write the prompt, and start generation.',
+        subtitle: 'Describe the image once. I will create the layer, write the prompt, and start generation.',
         initial: 'I am ready. Tell me what you want to make. More detail helps.',
         agentFailed: 'Task execution failed.',
         noHistory: 'No generation history yet.',
@@ -73,9 +70,7 @@ const panelCopy = {
         exec: 'Execute',
         run: 'Running',
         imageStarted: 'Image task started. It will appear in history when complete.',
-        videoStarted: 'Video task started. It will appear in history when complete.',
         imageSteps: ['Create image layer', 'Write enhanced prompt', 'Start current image model'],
-        videoSteps: ['Create video layer', 'Write enhanced prompt', 'Start current video model'],
     },
 } as const;
 
@@ -83,16 +78,13 @@ const nowLabel = () => new Date().toLocaleTimeString([], { hour: '2-digit', minu
 
 const createAgentElementId = () => `agent_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
-const inferAction = (text: string): 'image' | 'video' => (
-    /视频|短片|镜头|运镜|motion|camera|video|clip/i.test(text) ? 'video' : 'image'
-);
+const inferAction = (_text: string): 'image' => 'image';
 
 export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
     theme,
     compactMode,
     generationHistory,
     onCreateImage,
-    onCreateVideo,
 }) => {
     const language = useWorkspaceStore(state => state.language);
     const copy = language === 'zho' ? panelCopy.zho : panelCopy.en;
@@ -102,8 +94,8 @@ export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
     const [showHistory, setShowHistory] = useState(false);
     const [systemPrompt, setSystemPrompt] = useState(
         language === 'zho'
-            ? '你是 Flovart 的内置创作助手。把用户需求转成简洁、可执行、适合图像或视频生成的提示词。'
-            : 'You are Flovart\'s built-in creative assistant. Turn user requests into concise executable image or video prompts.'
+            ? '你是 Flovart 的内置创作助手。把用户需求转成简洁、可执行、适合图像生成的提示词。'
+            : 'You are Flovart\'s built-in creative assistant. Turn user requests into concise executable image prompts.'
     );
     const [logs, setLogs] = useState<MessageLog[]>([
         {
@@ -118,8 +110,7 @@ export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
 
     const endRef = useRef<HTMLDivElement>(null);
     const recentHistory = useMemo(() => generationHistory.slice(-5).reverse(), [generationHistory]);
-    const pendingAction = inferAction(typedText.trim());
-    const executionPlan = pendingAction === 'video' ? copy.videoSteps : copy.imageSteps;
+    const executionPlan = copy.imageSteps;
 
     useEffect(() => {
         endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -159,8 +150,8 @@ export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
                     name: layerName,
                     x: 120 + generationHistory.length * 32,
                     y: 140 + generationHistory.length * 28,
-                    width: action === 'video' ? 240 : 180,
-                    height: action === 'video' ? 140 : 180,
+                    width: 180,
+                    height: 180,
                 }, runtimeApi);
 
                 const elementId = typeof created.id === 'string' ? created.id : '';
@@ -177,15 +168,13 @@ export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
                 if (ignited.ok === false) {
                     throw new Error(getRuntimeErrorMessage(ignited, 'Agent 启动生成失败。'));
                 }
-            } else if (action === 'video') {
-                await onCreateVideo?.(finalPrompt);
             } else {
                 await onCreateImage?.(finalPrompt, layerName);
             }
 
             pushLog({
                 sender: 'agent',
-                text: action === 'video' ? copy.videoStarted : copy.imageStarted,
+                text: copy.imageStarted,
                 role: 'Agent',
                 status: 'success',
             });
@@ -329,7 +318,7 @@ export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
                     {typedText.trim() && (
                         <div className="isl-bubble isl-bubble--agent mb-3 px-3 py-3">
                             <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--isl-mint-deep)' }}>
-                                <span>{pendingAction === 'video' ? '🎬' : '🖼️'}</span>
+                                <span>🖼️</span>
                                 {copy.planTitle}
                             </div>
                             <div className="space-y-1.5 text-[11px] leading-relaxed">

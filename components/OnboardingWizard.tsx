@@ -21,7 +21,7 @@
 
 import React, { useState } from 'react';
 import type { AIProvider, AICapability, ModelItem, UserApiKey } from '../types';
-import { validateApiKey } from '../services/aiGateway';
+import { DEFAULT_IMAGE_MODEL, SUPPORTED_IMAGE_MODELS, validateApiKey } from '../services/aiGateway';
 import { fetchModelsForProvider, type FetchModelsResult } from '../services/modelFetcher';
 
 interface OnboardingWizardProps {
@@ -44,19 +44,19 @@ const STEPS = [
 
 /** Provider 对应的默认 capabilities */
 const PROVIDER_CAPABILITIES: Record<AIProvider, AICapability[]> = {
-    google: ['text', 'image', 'video'],
-    openai: ['text'],
+    google: ['image'],
+    openai: ['image'],
     anthropic: ['text'],
     qwen: ['text'],
     deepseek: ['text'],
-    siliconflow: ['text', 'image'],
-    keling: ['image', 'video'],
-    flux: ['image'],
-    midjourney: ['image'],
-    runningHub: ['image'],
-    minimax: ['text', 'image', 'video'],
+    siliconflow: ['text'],
+    keling: [],
+    flux: [],
+    midjourney: [],
+    runningHub: [],
+    minimax: ['text'],
     volcengine: ['text'],
-    openrouter: ['text', 'image'],
+    openrouter: ['text'],
     openai_compatible: ['text', 'image'],
     custom: ['text', 'image'],
 };
@@ -78,7 +78,7 @@ const PROVIDER_LABELS: Record<string, string> = {
 const CAPABILITY_LABELS: Record<AICapability, string> = {
     text: '✏️ LLM润色',
     image: '🖼️ 图片生成',
-    video: '🎬 视频生成',
+    video: '视频生成',
     agent: '图像工具',
 };
 
@@ -102,7 +102,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     const [error, setError] = useState<string | null>(null);
     // ── 自定义第三方 API 专用状态 ──
     const [customBaseUrl, setCustomBaseUrl] = useState('');
-    const [customCaps, setCustomCaps] = useState<AICapability[]>(['text', 'image']);
+    const [customCaps, setCustomCaps] = useState<AICapability[]>(['image']);
     const [customModelInput, setCustomModelInput] = useState('');
     const [isDetectingModels, setIsDetectingModels] = useState(false);
     const [detectedCapabilities, setDetectedCapabilities] = useState<AICapability[]>([]);
@@ -145,9 +145,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
     };
 
     const applyDetectedResult = (result: FetchModelsResult) => {
-        const models = result.models.map(model => ({ id: model.id, name: model.name || model.id }));
+        const allowed = result.models.filter(model => {
+            if (model.capability === 'video') return false;
+            if (model.capability === 'image') return (SUPPORTED_IMAGE_MODELS as readonly string[]).includes(model.id);
+            return customCaps.includes(model.capability);
+        });
+        const models = allowed.map(model => ({ id: model.id, name: model.name || model.id }));
         setDetectedModels(models);
-        setDetectedCapabilities(result.capabilitySummary || Array.from(new Set(result.models.map(model => model.capability))));
+        setDetectedCapabilities((result.capabilitySummary || Array.from(new Set(allowed.map(model => model.capability)))).filter(capability => capability !== 'video'));
         setEndpointFlavor(result.endpointFlavor || null);
     };
 
@@ -203,6 +208,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 let caps = provider === 'custom'
                     ? (detectedCapabilities.length > 0 ? detectedCapabilities : customCaps)
                     : PROVIDER_CAPABILITIES[provider];
+                caps = caps.filter(capability => capability !== 'video');
                 let modelsToSave: ModelItem[] | undefined;
                 let customModels: string[] | undefined;
                 let defaultModel: string | undefined;
@@ -210,8 +216,15 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
                 if (provider === 'custom') {
                     const detectionResult = await detectCustomEndpoint(true);
+                    const allowedFetchedModels = detectionResult?.ok
+                        ? detectionResult.models.filter(model => {
+                            if (model.capability === 'video') return false;
+                            if (model.capability === 'image') return (SUPPORTED_IMAGE_MODELS as readonly string[]).includes(model.id);
+                            return caps.includes(model.capability);
+                        })
+                        : [];
                     const fetchedModels = detectionResult?.ok
-                        ? detectionResult.models.map(model => ({ id: model.id, name: model.name || model.id }))
+                        ? allowedFetchedModels.map(model => ({ id: model.id, name: model.name || model.id }))
                         : detectedModels;
                     const resolvedEndpointFlavor = detectionResult?.endpointFlavor
                         || endpointFlavor
@@ -220,9 +233,9 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                     if (fetchedModels.length > 0) {
                         modelsToSave = mergeModelItems(fetchedModels, manualModels);
                         caps = detectionResult?.capabilitySummary && detectionResult.capabilitySummary.length > 0
-                            ? detectionResult.capabilitySummary
+                            ? detectionResult.capabilitySummary.filter(capability => capability !== 'video')
                             : detectionResult?.ok
-                                ? Array.from(new Set(detectionResult.models.map(model => model.capability)))
+                                ? Array.from(new Set(allowedFetchedModels.map(model => model.capability)))
                                 : caps;
                         defaultModel = fetchedModels[0]?.id;
                     } else {
@@ -232,6 +245,14 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
 
                     customModels = modelsToSave.map(model => model.id);
                     extraConfig = resolvedEndpointFlavor ? { endpointFlavor: resolvedEndpointFlavor } : undefined;
+                } else if (provider === 'google') {
+                    modelsToSave = [{ id: DEFAULT_IMAGE_MODEL, name: DEFAULT_IMAGE_MODEL }];
+                    customModels = [DEFAULT_IMAGE_MODEL];
+                    defaultModel = DEFAULT_IMAGE_MODEL;
+                } else if (provider === 'openai') {
+                    modelsToSave = [{ id: 'gpt-image-2', name: 'gpt-image-2' }];
+                    customModels = ['gpt-image-2'];
+                    defaultModel = 'gpt-image-2';
                 }
 
                 onAddApiKey({
@@ -439,7 +460,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                                         支持的能力
                                     </label>
                                     <div className="flex flex-wrap gap-2">
-                                        {(['text', 'image', 'video'] as AICapability[]).map(cap => (
+                                        {(['text', 'image'] as AICapability[]).map(cap => (
                                             <button
                                                 key={cap}
                                                 type="button"
@@ -456,7 +477,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                                                             : 'border-[#E4E7EC] text-[#667085] hover:bg-[#F9FAFB]'
                                                 }`}
                                             >
-                                                {cap === 'text' ? 'LLM 润色' : cap === 'image' ? '图片生成' : '视频生成'}
+                                                {cap === 'text' ? 'LLM 润色' : '图片生成'}
                                             </button>
                                         ))}
                                     </div>
@@ -520,7 +541,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                                     </a>
                                     {' '}→ 点击「Create API Key」→ 复制粘贴到这里。
                                     <br />
-                                    <span className="mt-1 inline-block">一个 Key 即可使用文生图、图生图和视频生成全部功能。</span>
+                                    <span className="mt-1 inline-block">一个 Key 即可使用文生图和图生图能力。</span>
                                 </>
                             )}
                             {provider === 'openai' && (
@@ -588,7 +609,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                             </div>
                             <div className={`mt-2 text-xs ${textSecondary}`}>
                                 可用功能：{(provider === 'custom' ? customCaps : PROVIDER_CAPABILITIES[provider]).map(c =>
-                                    c === 'text' ? 'LLM润色' : c === 'image' ? '图片生成' : c === 'video' ? '视频生成' : 'Agent'
+                                    c === 'text' ? 'LLM润色' : c === 'image' ? '图片生成' : 'Agent'
                                 ).join('、')}
                             </div>
                         </div>

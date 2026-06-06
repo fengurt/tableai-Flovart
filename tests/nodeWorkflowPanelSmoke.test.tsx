@@ -483,7 +483,7 @@ describe('NodeWorkflowPanel smoke', () => {
     expect(textarea.value).toBe('@[Video #1](workflow-node:video_1) ');
   });
 
-  it('shows readable context menus and only offers image and video nodes from canvas right click', () => {
+  it('shows readable context menus and only offers image nodes from canvas right click', () => {
     const { container } = render(
       <NodeWorkflowPanel
         prompt=""
@@ -514,7 +514,7 @@ describe('NodeWorkflowPanel smoke', () => {
     expect(menu).toBeTruthy();
     expect(menu?.className).not.toContain('bg-white');
     expect(screen.getByText('+ Image')).toBeTruthy();
-    expect(screen.getByText('+ Video')).toBeTruthy();
+    expect(screen.queryByText('+ Video')).toBeNull();
     expect(screen.queryByText('+ Text Prompt')).toBeNull();
     expect(screen.queryByText('+ HTTP Request')).toBeNull();
   });
@@ -629,7 +629,7 @@ describe('NodeWorkflowPanel smoke', () => {
     expect(container.querySelectorAll('.workflow-node-card')).toHaveLength(initialCount);
     expect(screen.getByText('Create node')).toBeTruthy();
     expect(screen.getByText('Image')).toBeTruthy();
-    expect(screen.getByText('Video')).toBeTruthy();
+    expect(screen.queryByText('Video')).toBeNull();
 
     fireEvent.click(screen.getByLabelText('Open saved workflows'));
     expect(screen.getByText('Saved workflows')).toBeTruthy();

@@ -125,37 +125,27 @@ describe('aiGateway - validateApiKey', () => {
 });
 
 describe('aiGateway - generateImageWithProvider', () => {
-    it('OpenRouter 使用 chat completions 返回图片 data url', async () => {
-        globalThis.fetch = vi.fn().mockResolvedValue(mockJsonResponse({
-            choices: [{
-                message: {
-                    images: [{ image_url: { url: 'data:image/png;base64,ZmFrZQ==' } }],
-                },
-            }],
-        }));
+    it('拒绝未列入配置的图片模型', async () => {
+        globalThis.fetch = vi.fn();
 
-        const result = await generateImageWithProvider('test prompt', 'openai/gpt-image-1', {
+        await expect(generateImageWithProvider('test prompt', 'openai/gpt-image-1', {
             id: '1',
             provider: 'openrouter',
             capabilities: ['image'],
             key: 'sk-or-test-key',
             createdAt: 0,
             updatedAt: 0,
-        });
+        })).rejects.toThrow('不支持的图片模型');
 
-        expect(result.newImageBase64).toBe('ZmFrZQ==');
-        expect(globalThis.fetch).toHaveBeenCalledWith(
-            expect.stringContaining('openrouter.ai/api/v1/chat/completions'),
-            expect.objectContaining({ method: 'POST' }),
-        );
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 
-    it('custom OpenAI 兼容端点即使模型带前缀也走 images/generations', async () => {
+    it('custom OpenAI 兼容端点使用支持的图片模型走 images/generations', async () => {
         globalThis.fetch = vi.fn().mockResolvedValue(mockJsonResponse({
             data: [{ b64_json: 'ZmFrZQ==' }],
         }));
 
-        const result = await generateImageWithProvider('test prompt', 'openai/gpt-image-1', {
+        const result = await generateImageWithProvider('test prompt', 'gpt-image-2', {
             id: '2',
             provider: 'custom',
             capabilities: ['image'],
@@ -178,7 +168,7 @@ describe('aiGateway - generateImageWithProvider', () => {
             data: [{ b64_json: 'ZmFrZQ==' }],
         }));
 
-        const result = await generateImageWithProvider('test prompt', 'gemini-3.1-flash-image-preview-512px', {
+        const result = await generateImageWithProvider('test prompt', 'gemini-3.1-flash-image-preview', {
             id: '3',
             provider: 'custom',
             capabilities: ['image'],
@@ -196,17 +186,17 @@ describe('aiGateway - generateImageWithProvider', () => {
         );
     });
 
-    it('不支持的 provider 抛出错误', async () => {
+    it('不支持的图片模型抛出错误', async () => {
         await expect(
             generateImageWithProvider('test prompt', 'claude-3-haiku', { id: '1', provider: 'anthropic', capabilities: ['text'], key: 'test', createdAt: 0, updatedAt: 0 })
-        ).rejects.toThrow('暂不支持');
+        ).rejects.toThrow('不支持的图片模型');
     });
     it('custom provider applies model mapping and custom auth header', async () => {
         globalThis.fetch = vi.fn().mockResolvedValue(mockJsonResponse({
             data: [{ b64_json: 'ZmFrZQ==' }],
         }));
 
-        const result = await generateImageWithProvider('test prompt', 'openai/gpt-image-1', {
+        const result = await generateImageWithProvider('test prompt', 'gpt-image-2', {
             id: '4',
             provider: 'custom',
             capabilities: ['image'],
@@ -216,7 +206,7 @@ describe('aiGateway - generateImageWithProvider', () => {
                 endpointFlavor: 'openai-compatible',
                 authHeaderName: 'x-api-key',
                 authScheme: '',
-                modelMappingsJson: '{"openai/gpt-image-1":"vendor-image-model"}',
+                modelMappingsJson: '{"gpt-image-2":"vendor-image-model"}',
             },
             createdAt: 0,
             updatedAt: 0,
@@ -388,13 +378,10 @@ describe('aiGateway - unified agent provider actions', () => {
 });
 
 describe('aiGateway - generateVideoWithProvider', () => {
-    it('custom 聚合端点支持 v2 统一视频接口', async () => {
-        globalThis.fetch = vi.fn()
-            .mockResolvedValueOnce(mockJsonResponse({ task_id: 'task-123' }))
-            .mockResolvedValueOnce(mockJsonResponse({ status: 'SUCCESS', data: { output: 'https://cdn.example.com/video.mp4' } }))
-            .mockResolvedValueOnce(mockBinaryResponse('video-binary'));
+    it('视频生成已关闭时直接拒绝请求', async () => {
+        globalThis.fetch = vi.fn();
 
-        const result = await generateVideoWithProvider('test video prompt', 'veo3-fast', {
+        await expect(generateVideoWithProvider('test video prompt', 'veo3-fast', {
             id: '4',
             provider: 'custom',
             capabilities: ['video'],
@@ -403,18 +390,8 @@ describe('aiGateway - generateVideoWithProvider', () => {
             extraConfig: { endpointFlavor: 'openai-compatible' },
             createdAt: 0,
             updatedAt: 0,
-        });
+        })).rejects.toThrow('视频生成已关闭');
 
-        expect(result.mimeType).toBe('video/mp4');
-        expect(globalThis.fetch).toHaveBeenNthCalledWith(
-            1,
-            'https://gateway.example.com/v2/videos/generations',
-            expect.objectContaining({ method: 'POST' }),
-        );
-        expect(globalThis.fetch).toHaveBeenNthCalledWith(
-            2,
-            'https://gateway.example.com/v2/videos/generations/task-123',
-            expect.objectContaining({ headers: expect.objectContaining({ Authorization: 'Bearer sk-test-key' }) }),
-        );
+        expect(globalThis.fetch).not.toHaveBeenCalled();
     });
 });

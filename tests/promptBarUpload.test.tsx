@@ -5,7 +5,7 @@ import { render } from '@testing-library/react';
 import { PromptBar } from '../components/PromptBar';
 
 describe('PromptBar media attachments', () => {
-  it('accepts both image and video reference uploads', () => {
+  it('accepts image reference uploads only', () => {
     const { container } = render(
       <PromptBar
         t={(key) => key}
@@ -27,6 +27,6 @@ describe('PromptBar media attachments', () => {
     );
 
     const input = container.querySelector('input[type="file"]') as HTMLInputElement | null;
-    expect(input?.accept).toBe('image/*,video/*');
+    expect(input?.accept).toBe('image/*');
   });
 });

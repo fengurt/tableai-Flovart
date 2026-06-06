@@ -9,10 +9,9 @@ import { WORKFLOW_TEMPLATES } from '../components/nodeflow/templates';
 describe('templateFilters', () => {
   it('classifies starter flows by their actual media node type', () => {
     const imageStarter = STARTER_WORKFLOW_TEMPLATES.find((template) => template.id === 'starter-image-flow');
-    const videoStarter = STARTER_WORKFLOW_TEMPLATES.find((template) => template.id === 'starter-video-flow');
 
     expect(imageStarter && getWorkflowTemplateFilterKind(imageStarter)).toBe('image');
-    expect(videoStarter && getWorkflowTemplateFilterKind(videoStarter)).toBe('video');
+    expect(STARTER_WORKFLOW_TEMPLATES.some((template) => getWorkflowTemplateFilterKind(template) === 'video')).toBe(false);
   });
 
   it('keeps RunningHub pipelines in the utility filter', () => {

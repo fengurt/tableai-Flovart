@@ -35,13 +35,17 @@ as generation, upload, edit, drag/drop, paste, save, and canvas zoom/pan prompt 
 ## LLM configuration
 
 Configure provider keys and supported models with `VITE_FLOVART_LLM_CONFIG`.
+Image generation is the only exposed generation capability. The supported image models are:
+
+- `gemini-3.1-flash-image-preview`
+- `gpt-image-2`
 
 ```bash
 VITE_FLOVART_LLM_CONFIG='{
   "modelPreference": {
     "textModel": "gemini-3-flash-preview",
     "imageModel": "gemini-3.1-flash-image-preview",
-    "videoModel": "veo-3.1-generate-preview"
+    "videoModel": ""
   },
   "providers": [
     {
@@ -50,13 +54,23 @@ VITE_FLOVART_LLM_CONFIG='{
       "provider": "google",
       "key": "AIza...",
       "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
-      "capabilities": ["text", "image", "video"],
+      "capabilities": ["image"],
       "isDefault": true,
-      "defaultModel": "gemini-3-flash-preview",
+      "defaultModel": "gemini-3.1-flash-image-preview",
       "models": [
-        { "id": "gemini-3-flash-preview", "name": "Gemini 3 Flash" },
-        { "id": "gemini-3.1-flash-image-preview", "name": "Gemini image" },
-        { "id": "veo-3.1-generate-preview", "name": "Veo" }
+        { "id": "gemini-3.1-flash-image-preview", "name": "Gemini image" }
+      ]
+    },
+    {
+      "id": "openai-image",
+      "name": "OpenAI image",
+      "provider": "openai",
+      "key": "sk-...",
+      "baseUrl": "https://api.openai.com/v1",
+      "capabilities": ["image"],
+      "defaultModel": "gpt-image-2",
+      "models": [
+        { "id": "gpt-image-2", "name": "GPT Image 2" }
       ]
     }
   ]
@@ -81,7 +95,7 @@ Runtime injection is also supported before the app bundle loads:
       modelPreference: {
         textModel: 'gemini-3-flash-preview',
         imageModel: 'gemini-3.1-flash-image-preview',
-        videoModel: 'veo-3.1-generate-preview'
+        videoModel: ''
       },
       providers: []
     }

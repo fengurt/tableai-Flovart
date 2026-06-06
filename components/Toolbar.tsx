@@ -332,7 +332,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,video/*"
+                accept="image/*"
                 className="hidden"
                 title={t('toolbar.upload')}
                 aria-label={t('toolbar.upload')}
