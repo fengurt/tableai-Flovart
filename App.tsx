@@ -43,9 +43,11 @@ import { generateId, getElementBounds, isPointInPolygon, rasterizeElement, raste
 import { useApiKeys, DEFAULT_MODEL_PREFS, normalizeApiKeyEntry } from './hooks/useApiKeys';
 import { useCanvasInteraction } from './hooks/useCanvasInteraction';
 import { useGeneration } from './hooks/useGeneration';
+import { useCredits } from './hooks/useCredits';
 import { useToast } from './hooks/useToast';
 import ToastStack from './components/Toast';
 import { AuthFooterActions } from './components/AuthGate';
+const TopupPanel = React.lazy(() => import('./components/TopupPanel').then(m => ({ default: m.TopupPanel })));
 import { AppShell } from './components/AppShell';
 import { CanvasWorkspace } from './components/workspaces/CanvasWorkspace';
 import { WorkflowWorkspace } from './components/workspaces/WorkflowWorkspace';
@@ -558,6 +560,14 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
         modelAutoSwitchNotice,
     } = useApiKeys(isSettingsPanelOpen);
 
+    const {
+        balance: creditBalance,
+        showTopup, setShowTopup,
+        refreshBalance,
+        deductForGeneration,
+        refundGeneration,
+    } = useCredits();
+
     useEffect(() => {
         if (!boards.length) return;
         if (!boards.some(board => board.id === activeBoardId)) {
@@ -849,6 +859,8 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
         setSelectedElementIds, setIsLoading, setError, setProgressMessage,
         setIsSettingsPanelOpen, setGenerationHistory, setInpaintState, setInpaintPrompt,
         commitAction, getPreferredApiKey,
+        onDeductCredits: deductForGeneration,
+        onRefundCredits: refundGeneration,
     });
 
     const getInlineApiKeyForElement = useCallback((element: CanvasElement) => {
@@ -3091,6 +3103,17 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                 setWheelAction={setWheelAction}
             />
             </Suspense>
+            {showTopup && (
+                <Suspense fallback={null}>
+                <TopupPanel
+                    isOpen={showTopup}
+                    onClose={() => setShowTopup(false)}
+                    balance={creditBalance}
+                    resolvedTheme={resolvedTheme}
+                    onTopupComplete={refreshBalance}
+                />
+                </Suspense>
+            )}
             {/* ============ 图层蒙版编辑浮动面板 ============ */}
 
             {/* ============ A/B 对比弹窗 ============ */}
@@ -3799,8 +3822,24 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                         paddingBottom: `${chromeMetrics.promptDockBottom}px`
                     }}
                 >
+                    {creditBalance !== null && (
+                        <button
+                            type="button"
+                            onClick={() => setShowTopup(true)}
+                            className="pointer-events-auto mb-1.5 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold transition-all hover:scale-105 active:scale-95"
+                            style={{
+                                fontFamily: 'var(--isl-font)',
+                                borderRadius: 'var(--isl-r-pill)',
+                                background: creditBalance > 0 ? 'var(--isl-mint-bg)' : 'rgba(232, 97, 90, 0.1)',
+                                color: creditBalance > 0 ? 'var(--isl-mint-deep)' : 'var(--isl-coral-deep)',
+                            }}
+                        >
+                            <span>{creditBalance > 0 ? '✦' : '⚠'}</span>
+                            <span>{creditBalance} 积分</span>
+                        </button>
+                    )}
 <div className="compact-prompt-dock__inner pointer-events-auto w-full transition-transform hover:-translate-y-0.5 duration-300 drop-shadow-xl" style={{ maxWidth: `${chromeMetrics.promptMaxWidth}px` }}>
-                        <PromptBar 
+                        <PromptBar
                             t={t}
                             theme={resolvedTheme}
                             compactMode={chromeMetrics.isTablet}

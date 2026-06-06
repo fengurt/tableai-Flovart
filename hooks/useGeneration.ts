@@ -63,6 +63,8 @@ export interface UseGenerationParams {
     setInpaintPrompt: (v: string) => void;
     commitAction: (updater: (prev: Element[]) => Element[]) => void;
     getPreferredApiKey: (capability: AICapability, provider?: AIProvider) => UserApiKey | undefined;
+    onDeductCredits?: (taskId: string) => Promise<boolean>;
+    onRefundCredits?: (taskId: string) => Promise<void>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -79,6 +81,7 @@ export function useGeneration(params: UseGenerationParams) {
         setSelectedElementIds, setIsLoading, setError, setProgressMessage,
         setIsSettingsPanelOpen, setGenerationHistory, setInpaintState, setInpaintPrompt,
         commitAction, getPreferredApiKey,
+        onDeductCredits, onRefundCredits,
     } = params;
 
     /* ---- local state ---- */
@@ -643,6 +646,13 @@ export function useGeneration(params: UseGenerationParams) {
             return;
         }
 
+        // 积分扣减：生成前检查余额
+        const creditTaskId = `gen_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        if (onDeductCredits) {
+            const allowed = await onDeductCredits(creditTaskId);
+            if (!allowed) return;
+        }
+
         setIsLoading(true);
         setError(null);
         setProgressMessage('正在准备生成...');
@@ -1110,6 +1120,8 @@ export function useGeneration(params: UseGenerationParams) {
 
             setError(friendlyMessage);
             console.error('Generation failed:', error);
+
+            onRefundCredits?.(creditTaskId);
 
             const usageKey = activeResolved.key;
             if (usageKey) {
