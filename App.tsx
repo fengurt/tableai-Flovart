@@ -7,7 +7,6 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo, Suspense } from 'react';
 import { Toolbar } from './components/Toolbar';
 import { PromptBar } from './components/PromptBar';
-import { DiagnosticBar } from './components/DiagnosticBar';
 import { Loader } from './components/Loader';
 import { WorkspaceSidebar } from './components/WorkspaceSidebar';
 import type { Tool, Point, Element, ImageElement, PathElement, ShapeElement, TextElement, ArrowElement, UserEffect, LineElement, WheelAction, GroupElement, Board, VideoElement, AssetLibrary, AssetCategory, AssetItem, UserApiKey, ModelPreference, AIProvider, AICapability, PromptEnhanceMode, CharacterLockProfile, GenerationHistoryItem, ThemeMode, ChatAttachment, ImageFilters } from './types';
@@ -19,7 +18,6 @@ import { InlinePromptBar } from './components/canvas-ui/InlinePromptBar';
 
 // Lazy-loaded components (not needed for first paint)
 const CanvasSettings = React.lazy(() => import('./components/CanvasSettings').then(m => ({ default: m.CanvasSettings })));
-const OnboardingWizard = React.lazy(() => import('./components/OnboardingWizard').then(m => ({ default: m.OnboardingWizard })));
 const RightPanel = React.lazy(() => import('./components/RightPanel').then(m => ({ default: m.RightPanel })));
 const AssetAddModal = React.lazy(() => import('./components/AssetAddModal').then(m => ({ default: m.AssetAddModal })));
 const ABCompareOverlay = React.lazy(() => import('./components/ABCompareOverlay').then(m => ({ default: m.ABCompareOverlay })));
@@ -3082,8 +3080,8 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
             main={<>
             <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"><div className="border border-[var(--border-color)] bg-neutral-800 px-6 py-4 text-sm text-white/60">Loading Settings…</div></div>}>
             <CanvasSettings
-                isOpen={isSettingsPanelOpen} 
-                onClose={() => setIsSettingsPanelOpen(false)} 
+                isOpen={isSettingsPanelOpen}
+                onClose={() => setIsSettingsPanelOpen(false)}
                 language={language}
                 setLanguage={setLanguage}
                 themeMode={themeMode}
@@ -3091,19 +3089,6 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                 setThemeMode={setThemeMode}
                 wheelAction={wheelAction}
                 setWheelAction={setWheelAction}
-                userApiKeys={userApiKeys}
-                onAddApiKey={handleAddApiKey}
-                onDeleteApiKey={handleDeleteApiKey}
-                onUpdateApiKey={handleUpdateApiKey}
-                onSetDefaultApiKey={handleSetDefaultApiKey}
-                modelPreference={modelPreference}
-                setModelPreference={setModelPreference}
-                t={t}
-                clearKeysOnExit={clearKeysOnExit}
-                setClearKeysOnExit={setClearKeysOnExit}
-                usageSummary={usageSummaryMap}
-                dynamicModelOptions={dynamicModelOptions}
-                isDeploymentManaged={isDeploymentManaged}
             />
             </Suspense>
             {/* ============ 图层蒙版编辑浮动面板 ============ */}
@@ -3204,21 +3189,6 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                 </div>
             )}
 
-            {/* 新用户引导弹窗 — 无 API Key 时自动出现 */}
-            {!isDeploymentManaged && showOnboarding && (
-                <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"><div className="rounded-xl bg-neutral-800 px-6 py-4 text-sm text-white/60">Loading…</div></div>}>
-                <OnboardingWizard
-                    isOpen={showOnboarding}
-                    onClose={() => {
-                        setShowOnboarding(false);
-                        localStorage.setItem('onboarding.skipped', 'true');
-                    }}
-                    onAddApiKey={handleAddApiKey}
-                    resolvedTheme={resolvedTheme}
-                />
-                </Suspense>
-            )}
-            
             <Toolbar
                 t={t}
                 theme={resolvedTheme}
@@ -3829,15 +3799,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                         paddingBottom: `${chromeMetrics.promptDockBottom}px`
                     }}
                 >
-                    {/* 自省诊断条 — 显示 API Key 能力覆盖状态 */}
-                    <div className="pointer-events-auto mb-1.5">
-                        <DiagnosticBar
-                            userApiKeys={userApiKeys}
-                            theme={resolvedTheme}
-                            onOpenSettings={() => setIsSettingsPanelOpen(true)}
-                        />
-                    </div>
-                    <div className="compact-prompt-dock__inner pointer-events-auto w-full transition-transform hover:-translate-y-0.5 duration-300 drop-shadow-xl" style={{ maxWidth: `${chromeMetrics.promptMaxWidth}px` }}>
+<div className="compact-prompt-dock__inner pointer-events-auto w-full transition-transform hover:-translate-y-0.5 duration-300 drop-shadow-xl" style={{ maxWidth: `${chromeMetrics.promptMaxWidth}px` }}>
                         <PromptBar 
                             t={t}
                             theme={resolvedTheme}
