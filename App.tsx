@@ -3950,7 +3950,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                         />
                     </div>
                     {/* 底部法律链接 */}
-                    <div data-auth-public="true" className="pointer-events-auto mt-1 flex items-center gap-2 text-[10px] opacity-55 hover:opacity-80 transition-opacity select-none">
+                    <div data-auth-public="true" className="pointer-events-auto mt-1 flex items-center gap-2 text-[10px] text-[var(--text-muted)] transition-colors select-none hover:text-[var(--text-primary)]">
                         <span className="rounded-full border border-current/15 px-2 py-0.5 font-medium tracking-[0.04em]">
                             {appVersionLabel}
                         </span>

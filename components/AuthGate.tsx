@@ -83,7 +83,7 @@ export const AuthFooterActions: React.FC = () => {
                 type="button"
                 data-auth-public="true"
                 disabled
-                className="cursor-wait border-none bg-transparent p-0 text-[10px] text-inherit opacity-60"
+                className="cursor-wait border border-[var(--border-color)] bg-[var(--panel-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--text-muted)] opacity-80"
             >
                 登录
             </button>
@@ -92,7 +92,7 @@ export const AuthFooterActions: React.FC = () => {
 
     if (!isAuthenticated) {
         return (
-            <SignInButton className="cursor-pointer border-none bg-transparent p-0 text-[10px] text-inherit underline-offset-2 hover:underline">
+            <SignInButton className="cursor-pointer border border-[var(--primary-bg)] bg-[var(--primary-bg)] px-3 py-1 text-[11px] font-semibold text-[var(--primary-text)] shadow-sm transition hover:border-[var(--accent-text)] hover:bg-[var(--accent-text)]">
                 登录
             </SignInButton>
         );
