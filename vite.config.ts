@@ -15,6 +15,16 @@ export default defineConfig(() => {
         port: 11451,
         host: host || '0.0.0.0',
         strictPort: true,
+        proxy: {
+          '/api': {
+            target: 'http://localhost:3100',
+            changeOrigin: true,
+          },
+          '/webhook': {
+            target: 'http://localhost:3100',
+            changeOrigin: true,
+          },
+        },
       },
       plugins: [tailwindcss(), react(), flovartBridge()],
       // 排除独立 HTML 文件，避免 esbuild 扫描其内联脚本报错

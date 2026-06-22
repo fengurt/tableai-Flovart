@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { LogtoProvider, useHandleSignInCallback, useLogto, type IdTokenClaims, type LogtoConfig } from '@logto/react';
 
 type AuthProviderRootProps = {
@@ -57,7 +58,12 @@ const SignInButton: React.FC<{ className?: string; children?: React.ReactNode }>
     );
 };
 
-export const AuthFooterActions: React.FC = () => {
+interface AuthFooterActionsProps {
+    creditBalance?: number | null;
+    onOpenTopup?: () => void;
+}
+
+export const AuthFooterActions: React.FC<AuthFooterActionsProps> = ({ creditBalance, onOpenTopup }) => {
     const { isAuthenticated, isLoading, signOut, getIdTokenClaims } = useLogto();
     const [claims, setClaims] = React.useState<IdTokenClaims>();
     const [showProfile, setShowProfile] = React.useState(false);
@@ -117,29 +123,86 @@ export const AuthFooterActions: React.FC = () => {
             >
                 退出
             </button>
-            {showProfile && (
+            {showProfile && createPortal(
                 <div
                     data-auth-public="true"
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4"
+                    className="theme-aware fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 px-4"
                     onClick={() => setShowProfile(false)}
                 >
                     <div
-                        className="w-full max-w-md border border-[var(--border-color)] bg-[var(--panel-bg)] p-6 text-left text-[var(--text-primary)]"
+                        className="isl-shell w-full max-w-sm p-0 text-left overflow-hidden"
                         onClick={event => event.stopPropagation()}
                     >
-                        <div className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[var(--accent-text)]">ACCOUNT</div>
-                        <h2 className="mt-2 text-xl font-semibold">个人中心</h2>
-                        <p className="mt-3 text-sm text-[var(--text-muted)]">个人中心页面还未完成。当前登录账号：</p>
-                        <p className="mt-2 break-all font-mono text-xs text-[var(--text-primary)]">{label}</p>
-                        <button
-                            type="button"
-                            onClick={() => setShowProfile(false)}
-                            className="mt-5 border border-[var(--border-color)] px-4 py-2 text-sm hover:border-[var(--accent-text)]"
-                        >
-                            关闭
-                        </button>
+                        {/* 头部 */}
+                        <div className="px-6 pt-6 pb-4">
+                            <div className="flex items-center justify-between">
+                                <div className="font-mono text-[10px] font-semibold tracking-[0.18em] text-[var(--isl-mint-deep)]">ACCOUNT</div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowProfile(false)}
+                                    className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--isl-ink-soft)] transition hover:bg-black/5"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                            <h2 className="mt-2 text-lg font-extrabold text-[var(--isl-ink)]">个人中心</h2>
+                        </div>
+
+                        {/* 用户信息 */}
+                        <div className="border-t border-[var(--isl-border)] px-6 py-4">
+                            <div className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--isl-ink-soft)]">账号</div>
+                            <p className="mt-1.5 break-all text-sm font-medium text-[var(--isl-ink)]">{label}</p>
+                            {claims?.sub && claims.sub !== label && (
+                                <p className="mt-1 font-mono text-[10px] text-[var(--isl-ink-ghost)]">ID: {claims.sub}</p>
+                            )}
+                        </div>
+
+                        {/* 积分 */}
+                        <div className="border-t border-[var(--isl-border)] px-6 py-4">
+                            <div className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--isl-ink-soft)]">积分余额</div>
+                            <div className="mt-2 flex items-end justify-between">
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-3xl font-extrabold tabular-nums text-[var(--isl-ink)]">
+                                        {creditBalance ?? '—'}
+                                    </span>
+                                    <span className="text-sm text-[var(--isl-ink-soft)]">积分</span>
+                                </div>
+                                {creditBalance !== null && creditBalance !== undefined && (
+                                    <span className="text-xs text-[var(--isl-ink-ghost)]">
+                                        ≈ {Math.floor((creditBalance || 0) / 50)} 张图
+                                    </span>
+                                )}
+                            </div>
+                            {onOpenTopup && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowProfile(false);
+                                        onOpenTopup();
+                                    }}
+                                    className="isl-go mt-3 w-full px-4 py-2.5 text-sm"
+                                >
+                                    充值积分
+                                </button>
+                            )}
+                        </div>
+
+                        {/* 底部操作 */}
+                        <div className="border-t border-[var(--isl-border)] px-6 py-4">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowProfile(false);
+                                    void signOut(appOrigin());
+                                }}
+                                className="w-full rounded-xl border border-[var(--isl-border)] px-4 py-2 text-sm font-medium text-[var(--isl-ink-soft)] transition hover:border-[var(--isl-border-strong)] hover:text-[var(--isl-ink)]"
+                            >
+                                退出登录
+                            </button>
+                        </div>
                     </div>
-                </div>
+                </div>,
+                document.body,
             )}
         </>
     );

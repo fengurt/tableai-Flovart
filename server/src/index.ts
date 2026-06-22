@@ -4,13 +4,16 @@ import { cors } from 'hono/cors';
 import { config } from './config.js';
 import { authGuard } from './middleware/auth.js';
 import { creditsRouter } from './routes/credits.js';
-import { topupRouter, paymentWebhook } from './routes/topup.js';
+import { topupRouter, topupPublicRouter, paymentWebhook } from './routes/topup.js';
 
 const app = new Hono();
 
 app.use('*', cors({ origin: config.corsOrigin, credentials: true }));
 
 app.get('/health', (c) => c.json({ ok: true }));
+
+// 公开接口（无需认证）
+app.route('/api/topup', topupPublicRouter);
 
 // 支付回调：不走 JWT 认证，走签名验证
 app.route('/webhook', paymentWebhook);

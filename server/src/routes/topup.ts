@@ -8,12 +8,13 @@ import { config, TOPUP_TIERS, type TopupTier } from '../config.js';
 type Env = { Variables: { userId: string } };
 
 export const topupRouter = new Hono<Env>();
+export const topupPublicRouter = new Hono();
 
 const generateOrderId = () =>
   `ord_${crypto.randomBytes(16).toString('hex')}`;
 
-// GET /tiers
-topupRouter.get('/tiers', (c) => {
+// GET /tiers — 公开接口，无需认证
+topupPublicRouter.get('/tiers', (c) => {
   const tiers = Object.entries(TOPUP_TIERS).map(([id, tier]) => ({
     id,
     priceCents: tier.amountCents,
@@ -101,6 +102,7 @@ paymentWebhook.post('/payment', async (c) => {
     .where(eq(topupOrder.id, body.orderId));
 
   await db.execute(sql`
+    SELECT pg_advisory_xact_lock(hashtext(${order.userId}));
     WITH latest AS (
       SELECT COALESCE(
         (SELECT balance_after FROM credit_ledger

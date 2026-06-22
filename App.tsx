@@ -3903,7 +3903,7 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                             {appVersionLabel}
                         </span>
                         <span>·</span>
-                        {authConfigured && <AuthFooterActions />}
+                        {authConfigured && <AuthFooterActions creditBalance={creditBalance} onOpenTopup={() => setShowTopup(true)} />}
                         {authConfigured && <span>·</span>}
                         <button className="underline-offset-2 hover:underline cursor-pointer bg-transparent border-none p-0 text-inherit text-[10px]" onClick={() => openLegalModal('terms')}>使用条款</button>
                         <span>·</span>

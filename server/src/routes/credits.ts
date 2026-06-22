@@ -73,8 +73,9 @@ creditsRouter.post('/deduct', async (c) => {
   const body = await c.req.json<{ taskId: string }>();
   const cost = CREDIT_COST_PER_IMAGE;
 
-  // 用 CTE 原子扣减：读最新余额 → 检查 → 插入，单条 SQL 无需应用层锁
+  // advisory lock 序列化同一用户的扣减，防止并发竞态
   const result = await db.execute(sql`
+    SELECT pg_advisory_xact_lock(hashtext(${userId}));
     WITH latest AS (
       SELECT COALESCE(
         (SELECT balance_after FROM credit_ledger
@@ -102,8 +103,8 @@ creditsRouter.post('/refund', async (c) => {
   const userId = c.get('userId');
   const body = await c.req.json<{ taskId: string }>();
 
-  // 原子退款：要求原始扣减存在 + 无重复退款，cost 从 deduction 记录派生
   const result = await db.execute(sql`
+    SELECT pg_advisory_xact_lock(hashtext(${userId}));
     WITH deduction AS (
       SELECT amount FROM credit_ledger
       WHERE user_id = ${userId} AND ref_id = ${body.taskId} AND type = 'generation'

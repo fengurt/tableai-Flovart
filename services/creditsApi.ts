@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_CREDITS_API_URL || 'http://localhost:3100';
+const API_BASE = import.meta.env.VITE_CREDITS_API_URL || '';
 
 let cachedToken: (() => Promise<string>) | null = null;
 
@@ -58,7 +58,7 @@ export const creditsApi = {
   },
 
   async getTiers(): Promise<TopupTier[]> {
-    const res = await authedFetch('/api/topup/tiers');
+    const res = await fetch(`${API_BASE}/api/topup/tiers`);
     if (!res.ok) throw new Error('Failed to fetch tiers');
     const data = await res.json();
     return data.tiers;

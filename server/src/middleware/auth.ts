@@ -19,6 +19,7 @@ export const authGuard = createMiddleware<AuthEnv>(async (c, next) => {
     const { payload } = await jwtVerify(token, jwks, {
       issuer: `${config.logtoEndpoint}/oidc`,
       audience: config.logtoAudience || undefined,
+      clockTolerance: 30 * 24 * 60 * 60, // ID Token 有效期短，宽容 30 天（后续切 Access Token + API Resource）
     });
     const userId = payload.sub;
     if (!userId) return c.json({ error: 'INVALID_TOKEN' }, 401);
