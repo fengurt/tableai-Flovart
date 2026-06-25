@@ -73,22 +73,23 @@ creditsRouter.post('/deduct', async (c) => {
   const body = await c.req.json<{ taskId: string }>();
   const cost = CREDIT_COST_PER_IMAGE;
 
-  // advisory lock 序列化同一用户的扣减，防止并发竞态
-  const result = await db.execute(sql`
-    SELECT pg_advisory_xact_lock(hashtext(${userId}));
-    WITH latest AS (
-      SELECT COALESCE(
-        (SELECT balance_after FROM credit_ledger
-         WHERE user_id = ${userId} ORDER BY id DESC LIMIT 1),
-        0
-      ) AS balance
-    )
-    INSERT INTO credit_ledger (user_id, amount, balance_after, type, ref_id)
-    SELECT ${userId}, ${-cost}, latest.balance - ${cost}, 'generation', ${body.taskId}
-    FROM latest
-    WHERE latest.balance >= ${cost}
-    RETURNING balance_after
-  `);
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
+    return tx.execute(sql`
+      WITH latest AS (
+        SELECT COALESCE(
+          (SELECT balance_after FROM credit_ledger
+           WHERE user_id = ${userId} ORDER BY id DESC LIMIT 1),
+          0
+        ) AS balance
+      )
+      INSERT INTO credit_ledger (user_id, amount, balance_after, type, ref_id)
+      SELECT ${userId}, ${-cost}, latest.balance - ${cost}, 'generation', ${body.taskId}
+      FROM latest
+      WHERE latest.balance >= ${cost}
+      RETURNING balance_after
+    `);
+  });
 
   if (result.length === 0) {
     const balance = await getBalance(userId);
@@ -103,31 +104,33 @@ creditsRouter.post('/refund', async (c) => {
   const userId = c.get('userId');
   const body = await c.req.json<{ taskId: string }>();
 
-  const result = await db.execute(sql`
-    SELECT pg_advisory_xact_lock(hashtext(${userId}));
-    WITH deduction AS (
-      SELECT amount FROM credit_ledger
-      WHERE user_id = ${userId} AND ref_id = ${body.taskId} AND type = 'generation'
-      LIMIT 1
-    ),
-    no_dup AS (
-      SELECT 1 WHERE NOT EXISTS (
-        SELECT 1 FROM credit_ledger
-        WHERE user_id = ${userId} AND ref_id = ${body.taskId} AND type = 'refund'
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`);
+    return tx.execute(sql`
+      WITH deduction AS (
+        SELECT amount FROM credit_ledger
+        WHERE user_id = ${userId} AND ref_id = ${body.taskId} AND type = 'generation'
+        LIMIT 1
+      ),
+      no_dup AS (
+        SELECT 1 WHERE NOT EXISTS (
+          SELECT 1 FROM credit_ledger
+          WHERE user_id = ${userId} AND ref_id = ${body.taskId} AND type = 'refund'
+        )
+      ),
+      latest AS (
+        SELECT COALESCE(
+          (SELECT balance_after FROM credit_ledger
+           WHERE user_id = ${userId} ORDER BY id DESC LIMIT 1),
+          0
+        ) AS balance
       )
-    ),
-    latest AS (
-      SELECT COALESCE(
-        (SELECT balance_after FROM credit_ledger
-         WHERE user_id = ${userId} ORDER BY id DESC LIMIT 1),
-        0
-      ) AS balance
-    )
-    INSERT INTO credit_ledger (user_id, amount, balance_after, type, ref_id)
-    SELECT ${userId}, -deduction.amount, latest.balance + (-deduction.amount), 'refund', ${body.taskId}
-    FROM deduction, no_dup, latest
-    RETURNING balance_after
-  `);
+      INSERT INTO credit_ledger (user_id, amount, balance_after, type, ref_id)
+      SELECT ${userId}, -deduction.amount, latest.balance + (-deduction.amount), 'refund', ${body.taskId}
+      FROM deduction, no_dup, latest
+      RETURNING balance_after
+    `);
+  });
 
   if (result.length === 0) {
     return c.json({ error: 'REFUND_NOT_APPLICABLE' }, 409);

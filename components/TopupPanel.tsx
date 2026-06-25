@@ -40,11 +40,7 @@ export const TopupPanel: React.FC<TopupPanelProps> = ({
     setOrdering(true);
     try {
       const result = await creditsApi.createTopup(selectedTier);
-      // TODO: 对接支付渠道后，这里跳转支付页面
-      // 当前直接提示订单已创建
-      alert(`订单已创建：${result.orderId}\n积分：${result.credits}\n待接入支付渠道`);
-      onTopupComplete();
-      onClose();
+      window.location.href = result.cashierUrl;
     } catch {
       alert('创建订单失败');
     } finally {

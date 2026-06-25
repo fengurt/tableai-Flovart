@@ -10,7 +10,10 @@ export const config = {
   logtoEndpoint: required('LOGTO_ENDPOINT'),
   logtoAudience: process.env.LOGTO_AUDIENCE || '',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:11451',
-  webhookSecret: process.env.WEBHOOK_SECRET || '',
+  fenpayBaseUrl: required('FENPAY_BASE_URL'),
+  fenpayAppId: required('FENPAY_APP_ID'),
+  fenpayAppSecret: required('FENPAY_APP_SECRET'),
+  fenpayWebhookSecret: required('FENPAY_WEBHOOK_SECRET'),
 };
 
 export const CREDIT_COST_PER_IMAGE = 50;

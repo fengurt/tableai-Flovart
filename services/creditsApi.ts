@@ -64,7 +64,12 @@ export const creditsApi = {
     return data.tiers;
   },
 
-  async createTopup(tier: string): Promise<{ orderId: string; amountCents: number; credits: number }> {
+  async createTopup(tier: string): Promise<{
+    orderId: string;
+    amountCents: number;
+    credits: number;
+    cashierUrl: string;
+  }> {
     const res = await authedFetch('/api/topup/create', {
       method: 'POST',
       body: JSON.stringify({ tier }),
