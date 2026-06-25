@@ -18,7 +18,7 @@ export const topupRouter = new Hono<Env>();
 export const topupPublicRouter = new Hono();
 
 const generateOrderId = () =>
-  `ord_${crypto.randomBytes(16).toString('hex')}`;
+  `ord${crypto.randomBytes(10).toString('hex')}`;
 
 // 分转元，保留两位小数
 const centsToYuan = (cents: number): string =>
@@ -57,7 +57,7 @@ topupRouter.post('/create', async (c) => {
   });
 
   const payment = await createPayment(orderId, centsToYuan(tier.amountCents), {
-    subject: `Flovart 积分充值 - ${tier.credits} 积分`,
+    subject: `Flovart积分充值${tier.credits}积分`,
     payType: 'WX_NATIVE',
     metadata: { userId, tier: body.tier },
   });
