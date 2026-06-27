@@ -17,6 +17,9 @@
     "jose": "^6.0.11",
     "postgres": "^3.4.7"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
   "devDependencies": {
     "@types/node": "^22.15.0",
     "drizzle-kit": "^0.31.1",
