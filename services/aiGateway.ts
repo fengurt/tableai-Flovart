@@ -37,8 +37,8 @@ export interface ModelParamSchema {
     defaultAspectRatio?: VideoAspectRatio;
 }
 
-export const SUPPORTED_IMAGE_MODELS = ['gemini-3.1-flash-image-preview', 'gpt-image-2'] as const;
-export const DEFAULT_IMAGE_MODEL = SUPPORTED_IMAGE_MODELS[0];
+export const SUPPORTED_IMAGE_MODELS = ['liblib-kontext', 'gemini-3.1-flash-image-preview', 'gpt-image-2'] as const;
+export const DEFAULT_IMAGE_MODEL = 'liblib-kontext';
 export const DISABLED_VIDEO_MODEL = '';
 const SUPPORTED_IMAGE_MODEL_SET = new Set<string>(SUPPORTED_IMAGE_MODELS);
 
@@ -388,7 +388,7 @@ export function inferCapabilityFromModel(model: string): AICapability | undefine
     const normalized = stripModelProviderPrefix(model);
     if (!normalized) return undefined;
     if (/^(veo([-.\d]|$)|video|wan|seedance|vidu|pika|runway|higgsfield|luma|kling|keling|sora|sdols|hailuo|qwen-video|liveportrait|videoretalk|emo)/.test(normalized)) return 'video';
-    if (/^(imagen|dall-e|gpt-image|flux|stable-diffusion|sdxl|midjourney|recraft|ideogram|qwen-image|seededit|nano-banana|jimeng|doubao-image|omni-image|grok-image)/.test(normalized)) return 'image';
+    if (/^(liblib|imagen|dall-e|gpt-image|flux|stable-diffusion|sdxl|midjourney|recraft|ideogram|qwen-image|seededit|nano-banana|jimeng|doubao-image|omni-image|grok-image)/.test(normalized)) return 'image';
     if (/^gemini/.test(normalized)) return normalized.includes('image') ? 'image' : 'text';
     if (/^(gpt|o\d|claude|qwen|deepseek|llama|command|mistral|doubao|abab|minimax)/.test(normalized)) return 'text';
     return undefined;
@@ -532,6 +532,7 @@ function isOpenAIImageEditModel(model: string): boolean {
 }
 
 export function supportsReferenceImageEditing(model: string): boolean {
+    if (/^liblib/i.test(model)) return true;
     const provider = inferProviderFromModel(model);
     if (provider === 'google') return isGoogleImageEditModel(model);
     if (provider === 'openai' || provider === 'custom') return isOpenAIImageEditModel(model);
@@ -540,6 +541,7 @@ export function supportsReferenceImageEditing(model: string): boolean {
 }
 
 export function supportsMaskImageEditing(model: string): boolean {
+    if (/^liblib/i.test(model)) return false;
     const provider = inferProviderFromModel(model);
     if (provider === 'google') return isGoogleImageEditModel(model);
     if (provider === 'openai' || provider === 'custom') return isOpenAIImageEditModel(model);
@@ -1386,21 +1388,16 @@ export async function reversePromptStreamWithProvider(
     return full.trim();
 }
 
-/**
- * 【函数】统一的图片生成入口
- *
- * 根据模型名称路由到 Google Imagen / OpenAI DALL-E 等。
- * 当前支持：google、openai、custom。
- *
- * @param prompt - 图片描述提示词
- * @param model  - 模型名称
- * @param key    - 用户 API Key
- */
 export async function generateImageWithProvider(
     prompt: string,
     model: string,
     key?: UserApiKey
 ): Promise<{ newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null }> {
+    if (/^liblib/i.test(model)) {
+        const { generateImageWithLiblib } = await import('./liblibClient');
+        return generateImageWithLiblib(prompt);
+    }
+
     if (!isSupportedImageGenerationModel(model)) {
         throw new Error(`不支持的图片模型：${model}。当前只支持 ${SUPPORTED_IMAGE_MODELS.join('、')}。`);
     }
@@ -1513,6 +1510,12 @@ export async function editImageWithProvider(
     key?: UserApiKey,
     options?: { mask?: ImageInput }
 ): Promise<{ newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null }> {
+    if (/^liblib/i.test(model)) {
+        const imageList = images.map(img => img.href).filter(Boolean);
+        const { generateImageWithLiblib } = await import('./liblibClient');
+        return generateImageWithLiblib(prompt, imageList.length > 0 ? imageList : undefined);
+    }
+
     const provider = resolveGenerationProvider(model, key);
 
     if (provider === 'google') {

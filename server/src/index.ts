@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { authGuard } from './middleware/auth.js';
 import { creditsRouter } from './routes/credits.js';
 import { topupRouter, topupPublicRouter, paymentWebhook } from './routes/topup.js';
+import { generateRouter } from './routes/generate.js';
 
 const app = new Hono();
 
@@ -22,6 +23,7 @@ const api = new Hono();
 api.use('*', authGuard);
 api.route('/credits', creditsRouter);
 api.route('/topup', topupRouter);
+api.route('/generate', generateRouter);
 
 app.route('/api', api);
 

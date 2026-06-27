@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLogto } from '@logto/react';
 import { creditsApi, setTokenProvider, type CreditBalance } from '../services/creditsApi';
+import { setLiblibTokenProvider } from '../services/liblibClient';
 
 export function useCredits() {
   const { isAuthenticated, getIdToken } = useLogto();
@@ -19,11 +20,13 @@ export function useCredits() {
     if (initialized.current) return;
     initialized.current = true;
 
-    setTokenProvider(async () => {
+    const provider = async () => {
       const token = await getIdToken();
       if (!token) throw new Error('No ID token available');
       return token;
-    });
+    };
+    setTokenProvider(provider);
+    setLiblibTokenProvider(provider);
 
     creditsApi.getBalance()
       .then((data: CreditBalance) => {

@@ -108,6 +108,9 @@ export function useGeneration(params: UseGenerationParams) {
 
     /** 智能解析模型+Key：如果当前模型的 Provider 没有健康 Key，自动降级到任意可用 Key */
     const resolveModelKey = useCallback((capability: 'image' | 'video' | 'text', currentModel: string) => {
+        if (/^liblib/i.test(currentModel)) {
+            return { model: currentModel, provider: 'custom' as const, key: undefined };
+        }
         const provider = inferProviderFromModel(currentModel);
         const healthyKeys = userApiKeys.filter(k => k.status !== 'error');
         const directKey = healthyKeys.find(k => {
