@@ -232,16 +232,12 @@ export const PromptBar: React.FC<PromptBarProps> = ({
     const activeKey = userApiKeys.find(k => k.isDefault) || userApiKeys[0];
     const activeModel = generationMode === 'video' ? selectedVideoModel : selectedImageModel;
     const promptCharCount = prompt.trim().length;
-    const readyState = !activeKey
-        ? 'missing-key'
-        : !prompt.trim()
+    const readyState = !prompt.trim()
             ? 'empty'
             : isLoading
                 ? 'generating'
                 : 'ready';
-    const readyCopy = readyState === 'missing-key'
-        ? '先连接一个 AI 供应商'
-        : readyState === 'empty'
+    const readyCopy = readyState === 'empty'
             ? '输入你想生成或修改的画面'
             : readyState === 'generating'
                 ? '正在生成，保持画布打开'
@@ -466,35 +462,7 @@ export const PromptBar: React.FC<PromptBarProps> = ({
                 <div className={`relative flex items-end gap-3 border-t ${compactMode ? 'px-2.5 py-2' : 'px-3 py-2.5'}`} style={{ borderColor: 'var(--isl-border)' }}>
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                            {/* API Key 状态指示器 — 与设置面板联动 */}
-                            {!hideApiStatus && (() => {
-                                const defaultKey = userApiKeys.find(k => k.isDefault);
-                                const keyCount = userApiKeys.length;
-                                if (keyCount === 0) {
-                                    return (
-                                        <button
-                                            type="button"
-                                            onClick={onOpenSettings}
-                                            className={`isl-chip border-dashed ${compactMode ? 'h-7 px-2.5 text-[11px]' : 'h-8 px-3 text-xs'}`}
-                                            style={{ borderColor: 'var(--isl-coral)', color: 'var(--isl-coral-deep)' }}
-                                        >
-                                            🔑 未配置 API Key
-                                        </button>
-                                    );
-                                }
-                                return (
-                                    <button
-                                        type="button"
-                                        onClick={onOpenSettings}
-                                        className={`isl-chip ${compactMode ? 'h-7 px-2.5 text-[11px]' : 'h-8 px-3 text-xs'}`}
-                                        title={`已配置 ${keyCount} 个 Key，点击打开设置管理`}
-                                    >
-                                        <span className={`inline-block h-2 w-2 rounded-full ${defaultKey?.status === 'ok' ? 'bg-green-500' : 'bg-yellow-400'}`} />
-                                        <span className="max-w-[100px] truncate">{defaultKey?.name || defaultKey?.provider || 'API Key'}</span>
-                                        {keyCount > 1 && <span className="text-[10px]" style={{ color: 'var(--isl-ink-ghost)' }}>+{keyCount - 1}</span>}
-                                    </button>
-                                );
-                            })()}
+                            {/* API Key 状态指示器 — 隐藏（后端统一管理模型） */}
 
 
                             <div className="relative">
@@ -513,7 +481,7 @@ export const PromptBar: React.FC<PromptBarProps> = ({
                                 )}
                             </div>
 
-                            <div className="relative">
+                            <div className="relative hidden">
                                 <button type="button" onClick={() => setExpandedPanel(prev => (prev === 'model' ? null : 'model'))} className={`${triggerClass} ${expandedPanel === 'model' ? activeTriggerClass : ''}`}>
                                     <span className="max-w-[150px] truncate">{getModelLabel(generationMode, selectedImageModel, selectedVideoModel)}</span>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m6 9 6 6 6-6" /></svg>
