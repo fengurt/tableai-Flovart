@@ -52,7 +52,17 @@ export async function generateImageWithLiblib(
   const imgRes = await fetch(result.images[0]);
   if (!imgRes.ok) throw new Error('下载生成图片失败');
   const blob = await imgRes.blob();
-  const buffer = await blob.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
-  return { newImageBase64: base64, newImageMimeType: blob.type || 'image/png', textResponse: null };
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+  const commaIdx = dataUrl.indexOf(',');
+  const mimeMatch = dataUrl.match(/^data:([^;]+)/);
+  return {
+    newImageBase64: dataUrl.slice(commaIdx + 1),
+    newImageMimeType: mimeMatch?.[1] || 'image/png',
+    textResponse: null,
+  };
 }
