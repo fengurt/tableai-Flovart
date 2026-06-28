@@ -2345,6 +2345,9 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
                 throw new Error('UNSUPPORTED_CAPABILITY: video generation is disabled');
             }
             const model = modelPreference.imageModel;
+            if (/^liblib/i.test(model)) {
+                return { model, key: undefined as unknown as UserApiKey };
+            }
             const provider = inferProviderFromModel(model);
             const key = getPreferredApiKey(capability, provider);
             if (!key) {
@@ -2778,10 +2781,11 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
             }
         };
 
-        const bridgeInterval = window.setInterval(() => {
+        const isDev = import.meta.env.DEV;
+        const bridgeInterval = isDev ? window.setInterval(() => {
             pollFileBridge().catch(() => undefined);
-        }, 500);
-        pollFileBridge().catch(() => undefined);
+        }, 500) : 0;
+        if (isDev) pollFileBridge().catch(() => undefined);
 
         // Listen for postMessage commands from extension content script
         const handleApiMessage = (e: MessageEvent) => {

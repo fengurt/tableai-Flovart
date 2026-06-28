@@ -1,90 +1,82 @@
 import type { GenerationHistoryItem } from '../types';
-import { offloadDataUrlRecords, rehydrateDataUrlRecords } from './mediaIndexedDBSentry';
+import { historyApi, type ServerHistoryItem } from '../services/creditsApi';
 
-const STORAGE_KEY = 'making.generationHistory.v1';
-const MAX_HISTORY_ITEMS = 18;
-/** 历史记录存储的缩略图最大尺寸 — 避免 localStorage 爆炸 */
+const MAX_HISTORY_ITEMS = 50;
 const THUMBNAIL_MAX_DIM = 256;
 
-export const loadGenerationHistory = (): GenerationHistoryItem[] => {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-};
+const toLocal = (item: ServerHistoryItem): GenerationHistoryItem => ({
+  id: item.id,
+  name: item.name || undefined,
+  dataUrl: item.imageUrl,
+  mimeType: item.mimeType,
+  width: item.width || 0,
+  height: item.height || 0,
+  prompt: item.prompt || '',
+  createdAt: new Date(item.createdAt).getTime(),
+  mediaType: (item.mediaType as 'image' | 'video') || 'image',
+});
 
-export const saveGenerationHistory = (items: GenerationHistoryItem[]) => {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch (err) {
-        console.error('[Storage] Failed to save generation history', err);
-        // 降级: 只保留最近 6 条再试一次
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(items.slice(0, 6)));
-        } catch {
-            // 彻底放弃持久化, 不阻断业务
-        }
-    }
-};
+export const loadGenerationHistory = (): GenerationHistoryItem[] => [];
+
+export const saveGenerationHistory = (_items: GenerationHistoryItem[]) => {};
 
 export const loadGenerationHistoryAsync = async (): Promise<GenerationHistoryItem[]> => {
-    const items = loadGenerationHistory();
-    return await rehydrateDataUrlRecords(items);
+  try {
+    const items = await historyApi.list();
+    return items.map(toLocal);
+  } catch {
+    return [];
+  }
 };
 
-export const saveGenerationHistoryAsync = async (items: GenerationHistoryItem[]) => {
-    try {
-        const slim = await offloadDataUrlRecords(items, 'history');
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
-    } catch (err) {
-        console.error('[Storage] Failed to save generation history', err);
-        try {
-            const slim = await offloadDataUrlRecords(items.slice(0, 6), 'history');
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
-        } catch {
-            // Give up quietly. History is optional persistence.
-        }
-    }
-};
+export const saveGenerationHistoryAsync = async (_items: GenerationHistoryItem[]) => {};
 
-/**
- * 将 base64 dataUrl 压缩为缩略图, 减少 localStorage 占用
- * 在浏览器主线程上同步返回 Promise
- */
-export const createThumbnailDataUrl = (
-    dataUrl: string,
-    maxDim: number = THUMBNAIL_MAX_DIM,
-): Promise<string> => {
-    return new Promise((resolve) => {
-        // 如果已经很小, 直接返回 (SVG / 非常短的 base64)
-        if (dataUrl.length < 8000) { resolve(dataUrl); return; }
-        const img = new Image();
-        img.onload = () => {
-            const { width: ow, height: oh } = img;
-            if (ow <= maxDim && oh <= maxDim) { resolve(dataUrl); return; }
-            const scale = Math.min(maxDim / ow, maxDim / oh);
-            const nw = Math.round(ow * scale);
-            const nh = Math.round(oh * scale);
-            const canvas = document.createElement('canvas');
-            canvas.width = nw;
-            canvas.height = nh;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) { resolve(dataUrl); return; }
-            ctx.drawImage(img, 0, 0, nw, nh);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-        };
-        img.onerror = () => resolve(dataUrl);
-        img.src = dataUrl;
+export const saveHistoryItemToServer = async (item: GenerationHistoryItem): Promise<void> => {
+  try {
+    await historyApi.add({
+      id: item.id,
+      name: item.name,
+      imageUrl: item.dataUrl,
+      mimeType: item.mimeType,
+      width: item.width,
+      height: item.height,
+      prompt: item.prompt,
+      mediaType: item.mediaType,
     });
+  } catch (err) {
+    console.error('[History] Failed to save to server', err);
+  }
+};
+
+export const createThumbnailDataUrl = (
+  dataUrl: string,
+  maxDim: number = THUMBNAIL_MAX_DIM,
+): Promise<string> => {
+  return new Promise((resolve) => {
+    if (dataUrl.length < 8000 || dataUrl.startsWith('http')) { resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = () => {
+      const { width: ow, height: oh } = img;
+      if (ow <= maxDim && oh <= maxDim) { resolve(dataUrl); return; }
+      const scale = Math.min(maxDim / ow, maxDim / oh);
+      const nw = Math.round(ow * scale);
+      const nh = Math.round(oh * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = nw;
+      canvas.height = nh;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve(dataUrl); return; }
+      ctx.drawImage(img, 0, 0, nw, nh);
+      resolve(canvas.toDataURL('image/jpeg', 0.7));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
 };
 
 export const addGenerationHistoryItem = (
-    items: GenerationHistoryItem[],
-    item: GenerationHistoryItem
+  items: GenerationHistoryItem[],
+  item: GenerationHistoryItem,
 ): GenerationHistoryItem[] => {
-    return [item, ...items.filter(existing => existing.dataUrl !== item.dataUrl)].slice(0, MAX_HISTORY_ITEMS);
+  return [item, ...items.filter(existing => existing.id !== item.id)].slice(0, MAX_HISTORY_ITEMS);
 };

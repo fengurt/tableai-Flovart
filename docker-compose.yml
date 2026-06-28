@@ -27,6 +27,8 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:3100:3100"
+    volumes:
+      - images:/data/flovart-images
     restart: unless-stopped
 
   web:
@@ -40,3 +42,4 @@ services:
 
 volumes:
   pgdata:
+  images:

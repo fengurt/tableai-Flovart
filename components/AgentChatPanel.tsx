@@ -336,8 +336,8 @@ export const AgentChatPanel: React.FC<AgentChatPanelProps> = ({
 
                     <div className="isl-well flex items-center gap-2 px-2 py-2">
                         <textarea
-                            rows={1}
-                            className="min-h-9 max-h-32 min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-2 text-[13px] leading-relaxed outline-none"
+                            rows={2}
+                            className="min-h-[52px] max-h-32 min-w-0 flex-1 resize-none border-0 bg-transparent px-2 py-2 text-[13px] leading-relaxed outline-none"
                             style={{ color: 'var(--isl-ink)', fontFamily: 'var(--isl-font)' }}
                             placeholder={copy.inputPlaceholder}
                             value={typedText}

@@ -26,3 +26,18 @@ export const topupOrder = pgTable('topup_order', {
 }, (table) => [
   index('idx_order_user').on(table.userId),
 ]);
+
+export const generationHistory = pgTable('generation_history', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  name: text('name'),
+  imageUrl: text('image_url').notNull(),
+  mimeType: text('mime_type').default('image/png').notNull(),
+  width: integer('width'),
+  height: integer('height'),
+  prompt: text('prompt'),
+  mediaType: text('media_type').default('image'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index('idx_history_user_created').on(table.userId, table.createdAt),
+]);

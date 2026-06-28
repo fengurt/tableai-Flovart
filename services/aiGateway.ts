@@ -1388,11 +1388,13 @@ export async function reversePromptStreamWithProvider(
     return full.trim();
 }
 
+type ImageGenResult = { newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null; imageUrl?: string };
+
 export async function generateImageWithProvider(
     prompt: string,
     model: string,
     key?: UserApiKey
-): Promise<{ newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null }> {
+): Promise<ImageGenResult> {
     if (/^liblib/i.test(model)) {
         const { generateImageWithLiblib } = await import('./liblibClient');
         return generateImageWithLiblib(prompt);
@@ -1509,7 +1511,7 @@ export async function editImageWithProvider(
     model: string,
     key?: UserApiKey,
     options?: { mask?: ImageInput }
-): Promise<{ newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null }> {
+): Promise<ImageGenResult> {
     if (/^liblib/i.test(model)) {
         const imageList = images.map(img => img.href).filter(Boolean);
         const { generateImageWithLiblib } = await import('./liblibClient');

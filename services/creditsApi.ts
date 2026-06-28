@@ -78,3 +78,44 @@ export const creditsApi = {
     return res.json();
   },
 };
+
+export type ServerHistoryItem = {
+  id: string;
+  name: string | null;
+  imageUrl: string;
+  mimeType: string;
+  width: number | null;
+  height: number | null;
+  prompt: string | null;
+  mediaType: string | null;
+  createdAt: string;
+};
+
+export const historyApi = {
+  async list(): Promise<ServerHistoryItem[]> {
+    const res = await authedFetch('/api/history');
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.items || [];
+  },
+
+  async add(item: {
+    id: string;
+    name?: string;
+    imageUrl: string;
+    mimeType?: string;
+    width?: number;
+    height?: number;
+    prompt?: string;
+    mediaType?: string;
+  }): Promise<void> {
+    await authedFetch('/api/history', {
+      method: 'POST',
+      body: JSON.stringify(item),
+    });
+  },
+
+  async remove(id: string): Promise<void> {
+    await authedFetch(`/api/history/${id}`, { method: 'DELETE' });
+  },
+};

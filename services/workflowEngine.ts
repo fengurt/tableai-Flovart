@@ -361,7 +361,23 @@ async function executeImageGen(
     return { image: refImage };
   }
   const provider = (node.config?.provider as AIProvider) || 'google';
-  const model = node.config?.model || (provider === 'openrouter' ? 'google/gemini-3.1-flash-image-preview' : provider === 'openai' ? 'gpt-image-2' : 'gemini-3.1-flash-image-preview');
+  const model = node.config?.model || 'liblib-kontext';
+
+  if (/^liblib/i.test(model)) {
+    const { generateImageWithLiblib } = await import('../services/liblibClient');
+    const imageList = refImage ? [refImage.href] : undefined;
+    const result = await generateImageWithLiblib(prompt, imageList);
+    if (result?.newImageBase64 && result?.newImageMimeType) {
+      return {
+        image: imageValue(
+          `data:${result.newImageMimeType};base64,${result.newImageBase64}`,
+          result.newImageMimeType,
+        ),
+      };
+    }
+    return { text: result?.textResponse || '生图未返回结果' };
+  }
+
   const key = resolveNodeApiKey(ctx.apiKeys, node.config, provider);
   if (!key) {
     throw new Error(node.config?.apiKeyRef ? '未找到节点绑定的 API Key' : `未找到 ${provider} 的 API Key`);

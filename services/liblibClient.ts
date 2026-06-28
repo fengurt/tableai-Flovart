@@ -1,8 +1,8 @@
 /**
- * [INPUT]: server /api/generate endpoints
- * [OUTPUT]: generateImageWithLiblib — calls server-side LiblibAI, returns base64
+ * [INPUT]: server /api/generate + /api/images endpoints
+ * [OUTPUT]: generateImageWithLiblib — returns persistent image URL
  * [POS]: services — LiblibAI frontend client
- * [PROTOCOL]: update on server generate API changes
+ * [PROTOCOL]: update on server generate/images API changes
  */
 const API_BASE = import.meta.env.VITE_CREDITS_API_URL || '';
 
@@ -25,10 +25,17 @@ const authedFetch = async (path: string, init?: RequestInit): Promise<Response> 
   });
 };
 
+export type LiblibResult = {
+  newImageBase64: string | null;
+  newImageMimeType: string | null;
+  textResponse: string | null;
+  imageUrl?: string;
+};
+
 export async function generateImageWithLiblib(
   prompt: string,
   imageList?: string[],
-): Promise<{ newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null }> {
+): Promise<LiblibResult> {
   const res = await authedFetch('/api/generate/image', {
     method: 'POST',
     body: JSON.stringify({ prompt, imageList }),
@@ -37,9 +44,11 @@ export async function generateImageWithLiblib(
     const data = await res.json().catch(() => ({}));
     throw new Error((data as any).error || `生图失败: ${res.status}`);
   }
-  const { generateUuid } = (await res.json()) as { generateUuid: string };
+  const { generateUuid, _tmpFiles } = (await res.json()) as { generateUuid: string; _tmpFiles?: string[] };
 
-  const statusRes = await authedFetch(`/api/generate/status/${generateUuid}`);
+  const statusRes = await authedFetch(`/api/generate/status/${generateUuid}`, {
+    headers: _tmpFiles?.length ? { 'X-Tmp-Files': _tmpFiles.join(',') } : {},
+  });
   if (!statusRes.ok) {
     const data = await statusRes.json().catch(() => ({}));
     throw new Error((data as any).error || '查询生图结果失败');
@@ -49,20 +58,17 @@ export async function generateImageWithLiblib(
     throw new Error(result.error || '生图未返回结果');
   }
 
-  const imgRes = await fetch(result.images[0]);
-  if (!imgRes.ok) throw new Error('下载生成图片失败');
-  const blob = await imgRes.blob();
-  const dataUrl = await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
+  const persistRes = await authedFetch('/api/images/persist', {
+    method: 'POST',
+    body: JSON.stringify({ url: result.images[0] }),
   });
-  const commaIdx = dataUrl.indexOf(',');
-  const mimeMatch = dataUrl.match(/^data:([^;]+)/);
+  if (!persistRes.ok) throw new Error('保存图片失败');
+  const { imageUrl } = (await persistRes.json()) as { imageUrl: string };
+
   return {
-    newImageBase64: dataUrl.slice(commaIdx + 1),
-    newImageMimeType: mimeMatch?.[1] || 'image/png',
+    newImageBase64: null,
+    newImageMimeType: null,
     textResponse: null,
+    imageUrl,
   };
 }

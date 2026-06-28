@@ -709,29 +709,52 @@ export function useCanvasInteraction(params: UseCanvasInteractionParams) {
         dragStartElementPositions.current.clear();
     };
 
+    const wheelAccum = useRef({ dx: 0, dy: 0, cx: 0, cy: 0, isZoom: false, rafId: 0 });
+
     const handleWheel = (e: WheelEvent | React.WheelEvent<SVGSVGElement>) => {
         if (croppingState || editingElement) { e.preventDefault(); return; }
         e.preventDefault();
         const { clientX, clientY, deltaX, deltaY, ctrlKey } = e;
+        const isZoom = ctrlKey || wheelAction === 'zoom';
+        const acc = wheelAccum.current;
 
-        if (ctrlKey || wheelAction === 'zoom') {
-            const oldZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
-            const normalizedDelta = Math.max(-180, Math.min(180, deltaY));
-            const zoomFactor = Math.pow(1.0016, -normalizedDelta);
-            const newZoom = oldZoom * zoomFactor;
-            const clampedZoom = Math.max(0.1, Math.min(newZoom, 10));
+        if (acc.isZoom !== isZoom && acc.rafId) {
+            cancelAnimationFrame(acc.rafId);
+            acc.rafId = 0;
+            acc.dx = 0; acc.dy = 0;
+        }
+        acc.isZoom = isZoom;
+        acc.dx += deltaX;
+        acc.dy += deltaY;
+        acc.cx = clientX;
+        acc.cy = clientY;
 
-            const svgBounds = svgRef.current?.getBoundingClientRect();
-            const mousePoint = svgBounds
-                ? { x: clientX - svgBounds.left, y: clientY - svgBounds.top }
-                : { x: clientX, y: clientY };
-            const newPanX = mousePoint.x - (mousePoint.x - panOffset.x) * (clampedZoom / oldZoom);
-            const newPanY = mousePoint.y - (mousePoint.y - panOffset.y) * (clampedZoom / oldZoom);
+        if (!acc.rafId) {
+            acc.rafId = requestAnimationFrame(() => {
+                acc.rafId = 0;
+                const { dx, dy, cx, cy } = acc;
+                acc.dx = 0; acc.dy = 0;
 
-            updateActiveBoard(b => ({ ...b, zoom: clampedZoom, panOffset: { x: newPanX, y: newPanY }}));
-
-        } else { // Panning (wheelAction === 'pan' and no ctrlKey)
-            updateActiveBoard(b => ({ ...b, panOffset: { x: b.panOffset.x - deltaX, y: b.panOffset.y - deltaY }}));
+                if (acc.isZoom) {
+                    updateActiveBoard(b => {
+                        const oldZoom = Number.isFinite(b.zoom) && b.zoom > 0 ? b.zoom : 1;
+                        const clamped = Math.max(-300, Math.min(300, dy));
+                        const newZoom = Math.max(0.1, Math.min(oldZoom * Math.pow(1.003, -clamped), 10));
+                        const svgBounds = svgRef.current?.getBoundingClientRect();
+                        const mp = svgBounds ? { x: cx - svgBounds.left, y: cy - svgBounds.top } : { x: cx, y: cy };
+                        return {
+                            ...b,
+                            zoom: newZoom,
+                            panOffset: {
+                                x: mp.x - (mp.x - b.panOffset.x) * (newZoom / oldZoom),
+                                y: mp.y - (mp.y - b.panOffset.y) * (newZoom / oldZoom),
+                            },
+                        };
+                    });
+                } else {
+                    updateActiveBoard(b => ({ ...b, panOffset: { x: b.panOffset.x - dx, y: b.panOffset.y - dy }}));
+                }
+            });
         }
     };
 

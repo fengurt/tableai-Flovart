@@ -10,8 +10,18 @@ import {
     inferProviderFromModel, inferCapabilitiesByProvider, PROVIDER_LABELS, supportsMaskImageEditing, supportsReferenceImageEditing,
     DEFAULT_PROVIDER_MODELS, splitImageLayersWithProvider, runImageAgentWithProvider,
 } from '../services/aiGateway';
-import { addGenerationHistoryItem, createThumbnailDataUrl } from '../utils/generationHistory';
+import { addGenerationHistoryItem, createThumbnailDataUrl, saveHistoryItemToServer } from '../utils/generationHistory';
 import { recordApiUsage } from '../utils/usageMonitor';
+
+type GenResult = { newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null; imageUrl?: string };
+
+const resolveImageHref = (result: GenResult): { href: string; mimeType: string } | null => {
+    if (result.imageUrl) return { href: result.imageUrl, mimeType: 'image/png' };
+    if (result.newImageBase64 && result.newImageMimeType) {
+        return { href: `data:${result.newImageMimeType};base64,${result.newImageBase64}`, mimeType: result.newImageMimeType };
+    }
+    return null;
+};
 
 /**
  * Compute the max canvas display dimension based on the user's screen.
@@ -152,13 +162,12 @@ export function useGeneration(params: UseGenerationParams) {
         prompt: string;
         mediaType?: 'image' | 'video';
     }) => {
-        // 存缩略图到历史, 避免 localStorage 爆炸
         const thumbnailUrl = await createThumbnailDataUrl(payload.dataUrl);
         const item: GenerationHistoryItem = {
             id: generateId(),
             name: payload.name,
-            dataUrl: thumbnailUrl,
-            mimeType: 'image/jpeg',
+            dataUrl: payload.dataUrl.startsWith('http') ? payload.dataUrl : thumbnailUrl,
+            mimeType: payload.mimeType,
             width: payload.width,
             height: payload.height,
             prompt: payload.prompt,
@@ -167,6 +176,7 @@ export function useGeneration(params: UseGenerationParams) {
         };
 
         setGenerationHistory(prev => addGenerationHistoryItem(prev, item));
+        saveHistoryItemToServer(item);
 
         const genType = payload.mediaType ?? 'image';
         const activeModel = genType === 'video' ? modelPreference.videoModel : modelPreference.imageModel;
@@ -1075,10 +1085,10 @@ export function useGeneration(params: UseGenerationParams) {
                         resolvedImageKey,
                     );
 
-                if (result.newImageBase64 && result.newImageMimeType) {
-                    const { newImageBase64, newImageMimeType } = result;
-
+                const resolved = resolveImageHref(result);
+                if (resolved) {
                     const img = new Image();
+                    img.crossOrigin = 'anonymous';
                     img.onload = () => {
                         if (!svgRef.current) return;
                         const svgBounds = svgRef.current.getBoundingClientRect();
@@ -1090,7 +1100,7 @@ export function useGeneration(params: UseGenerationParams) {
                         const newImage: ImageElement = {
                             id: generateId(), type: 'image', x, y, name: imageOutputName,
                             width: img.width, height: img.height,
-                            href: `data:${newImageMimeType};base64,${newImageBase64}`, mimeType: newImageMimeType,
+                            href: resolved.href, mimeType: resolved.mimeType,
                         };
                         commitAction(prev => [...prev, newImage]);
                         setSelectedElementIds([newImage.id]);
@@ -1104,7 +1114,7 @@ export function useGeneration(params: UseGenerationParams) {
                         });
                     };
                     img.onerror = () => setError('Failed to load the generated image.');
-                    img.src = `data:${newImageMimeType};base64,${newImageBase64}`;
+                    img.src = resolved.href;
                 } else {
                     setError(result.textResponse || 'Generation failed to produce an image.');
                 }
