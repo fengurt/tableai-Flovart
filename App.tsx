@@ -2371,15 +2371,17 @@ const App: React.FC<{ authConfigured?: boolean }> = ({ authConfigured = false })
             setProgressMessage('Agent image generation...');
             try {
                 const result = await generateImageWithProvider(input.prompt, model, key);
-                if (!result.newImageBase64 || !result.newImageMimeType) {
+                const href = result.imageUrl
+                    || (result.newImageBase64 && result.newImageMimeType ? `data:${result.newImageMimeType};base64,${result.newImageBase64}` : null);
+                if (!href) {
                     throw new Error(result.textResponse || 'Image provider did not return an image.');
                 }
-                const href = `data:${result.newImageMimeType};base64,${result.newImageBase64}`;
+                const mimeType = result.newImageMimeType || 'image/png';
                 const size = await loadImageSize(href);
                 const placed = addMediaElement({
                     type: 'image',
                     href,
-                    mimeType: result.newImageMimeType,
+                    mimeType,
                     width: size.width,
                     height: size.height,
                     name: input.name || 'Agent Image',
