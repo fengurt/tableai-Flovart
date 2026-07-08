@@ -12,11 +12,19 @@ import {
 } from '../services/aiGateway';
 import { addGenerationHistoryItem, createThumbnailDataUrl, saveHistoryItemToServer } from '../utils/generationHistory';
 import { recordApiUsage } from '../utils/usageMonitor';
+import { uploadImageToServer } from '../services/creditsApi';
 
 type GenResult = { newImageBase64: string | null; newImageMimeType: string | null; textResponse: string | null; imageUrl?: string };
 
+const persistGenResult = async (result: GenResult): Promise<GenResult> => {
+    if (result.imageUrl || !result.newImageBase64 || !result.newImageMimeType) return result;
+    const url = await uploadImageToServer(result.newImageBase64, result.newImageMimeType);
+    if (url) return { ...result, imageUrl: url, newImageBase64: null };
+    return result;
+};
+
 const resolveImageHref = (result: GenResult): { href: string; mimeType: string } | null => {
-    if (result.imageUrl) return { href: result.imageUrl, mimeType: 'image/png' };
+    if (result.imageUrl) return { href: result.imageUrl, mimeType: result.newImageMimeType || 'image/png' };
     if (result.newImageBase64 && result.newImageMimeType) {
         return { href: `data:${result.newImageMimeType};base64,${result.newImageBase64}`, mimeType: result.newImageMimeType };
     }
@@ -442,17 +450,18 @@ export function useGeneration(params: UseGenerationParams) {
 
             setProgressMessage('AI 正在补全画面...');
 
-            const result = await editImageWithProvider(
+            const result = await persistGenResult(await editImageWithProvider(
                 [{ href: expandedDataUrl, mimeType: 'image/png' }],
                 `Seamlessly extend the image content outward. Continue the existing scene, lighting, and style naturally into the new areas. Do not change or alter the original central area.`,
                 outpaintResolved.model,
                 outpaintResolved.key,
                 { mask: { href: maskDataUrl, mimeType: 'image/png' } },
-            );
+            ));
 
-            if (result && result.newImageBase64) {
-                const newMime = result.newImageMimeType || 'image/png';
-                const newHref = `data:${newMime};base64,${result.newImageBase64}`;
+            const outpaintResolved2 = resolveImageHref(result);
+            if (outpaintResolved2) {
+                const newMime = outpaintResolved2.mimeType;
+                const newHref = outpaintResolved2.href;
                 commitAction(prev => prev.map(el =>
                     el.id === element.id
                         ? {
@@ -567,25 +576,26 @@ export function useGeneration(params: UseGenerationParams) {
 
             setProgressMessage('正在 AI 局部重绘...');
 
-            const result = await editImageWithProvider(
+            const result = await persistGenResult(await editImageWithProvider(
                 [{ href: targetImage.href, mimeType: targetImage.mimeType }],
                 inpaintPrompt.trim(),
                 inpaintResolved.model,
                 inpaintResolved.key,
                 { mask: { href: maskDataUrl, mimeType: 'image/png' } },
-            );
+            ));
 
-            if (result && result.newImageBase64) {
-                const newMime = result.newImageMimeType || 'image/png';
+            const inpaintHref = resolveImageHref(result);
+            if (inpaintHref) {
+                const newMime = inpaintHref.mimeType;
                 commitAction(prev => prev.map(el =>
                     el.id === targetImage.id
-                        ? { ...el, href: `data:${newMime};base64,${result.newImageBase64}`, mimeType: newMime }
+                        ? { ...el, href: inpaintHref.href, mimeType: newMime }
                         : el
                 ));
 
                 saveGenerationToHistory({
                     name: `Inpaint: ${inpaintPrompt.trim().slice(0, 30)}`,
-                    dataUrl: `data:${newMime};base64,${result.newImageBase64}`,
+                    dataUrl: inpaintHref.href,
                     mimeType: newMime,
                     width: targetImage.width,
                     height: targetImage.height,
@@ -918,27 +928,26 @@ export function useGeneration(params: UseGenerationParams) {
                     }
                     const baseImage = imageElements[0];
                     const maskData = await rasterizeMask(maskPaths, baseImage);
-                    const result = await editImageWithProvider(
+                    const result = await persistGenResult(await editImageWithProvider(
                         [{ href: baseImage.href, mimeType: baseImage.mimeType }],
                         effectivePrompt,
                         resolvedImageModel,
                         resolvedImageKey,
                         { mask: { href: maskData.href, mimeType: maskData.mimeType } },
-                    );
+                    ));
 
-                    if (result.newImageBase64 && result.newImageMimeType) {
-                        const { newImageBase64, newImageMimeType } = result;
-
+                    const maskResolved = resolveImageHref(result);
+                    if (maskResolved) {
                         const img = new Image();
+                        img.crossOrigin = 'anonymous';
                         img.onload = () => {
                             const maskPathIds = new Set(maskPaths.map(p => p.id));
-                            const nextDataUrl = `data:${newImageMimeType};base64,${newImageBase64}`;
                             commitAction(prev =>
                                 prev.map(el => {
                                     if (el.id === baseImage.id && el.type === 'image') {
                                         return {
                                             ...el,
-                                            href: nextDataUrl,
+                                            href: maskResolved.href,
                                             width: img.width,
                                             height: img.height,
                                         };
@@ -949,15 +958,15 @@ export function useGeneration(params: UseGenerationParams) {
                             setSelectedElementIds([baseImage.id]);
                             saveGenerationToHistory({
                                 name: baseImage.name || 'Edited image',
-                                dataUrl: nextDataUrl,
-                                mimeType: newImageMimeType,
+                                dataUrl: maskResolved.href,
+                                mimeType: maskResolved.mimeType,
                                 width: img.width,
                                 height: img.height,
                                 prompt: effectivePrompt,
                             });
                         };
                         img.onerror = () => setError('Failed to load the generated image.');
-                        img.src = `data:${newImageMimeType};base64,${newImageBase64}`;
+                        img.src = maskResolved.href;
 
                     } else {
                         setError(result.textResponse || 'Inpainting failed to produce an image.');
@@ -973,17 +982,17 @@ export function useGeneration(params: UseGenerationParams) {
                 const imagesToProcess = await Promise.all(imagePromises);
 
                 const { prompt: mentionPrompt, orderedMentionImages } = buildMentionAwarePrompt(effectivePrompt, mentionedImageElements);
-                const result = await editImageWithProvider(
+                const result = await persistGenResult(await editImageWithProvider(
                     [...imagesToProcess, ...orderedMentionImages, ...attachmentReferenceImages, ...characterReferenceImages],
                     mentionPrompt,
                     resolvedImageModel,
                     resolvedImageKey,
-                );
+                ));
 
-                if (result.newImageBase64 && result.newImageMimeType) {
-                    const { newImageBase64, newImageMimeType } = result;
-
+                const editResolved = resolveImageHref(result);
+                if (editResolved) {
                     const img = new Image();
+                    img.crossOrigin = 'anonymous';
                     img.onload = () => {
                         let minX = Infinity, minY = Infinity, maxX = -Infinity;
                         selectedElements.forEach(el => {
@@ -998,7 +1007,7 @@ export function useGeneration(params: UseGenerationParams) {
                         const newImage: ImageElement = {
                             id: generateId(), type: 'image', x, y, name: imageOutputName,
                             width: img.width, height: img.height,
-                            href: `data:${newImageMimeType};base64,${newImageBase64}`, mimeType: newImageMimeType,
+                            href: editResolved.href, mimeType: editResolved.mimeType,
                         };
                         commitAction(prev => [...prev, newImage]);
                         setSelectedElementIds([newImage.id]);
@@ -1012,7 +1021,7 @@ export function useGeneration(params: UseGenerationParams) {
                         });
                     };
                     img.onerror = () => setError('Failed to load the generated image.');
-                    img.src = `data:${newImageMimeType};base64,${newImageBase64}`;
+                    img.src = editResolved.href;
                 } else {
                     setError(result.textResponse || 'Generation failed to produce an image.');
                 }
@@ -1024,16 +1033,17 @@ export function useGeneration(params: UseGenerationParams) {
                 }
                 setProgressMessage('Generating with reference images...');
                 const { prompt: mentionPrompt2, orderedMentionImages: orderedRefs } = buildMentionAwarePrompt(effectivePrompt, mentionedImageElements);
-                const result = await editImageWithProvider(
+                const result = await persistGenResult(await editImageWithProvider(
                     [...orderedRefs, ...attachmentReferenceImages, ...characterReferenceImages],
                     mentionPrompt2,
                     resolvedImageModel,
                     resolvedImageKey,
-                );
+                ));
 
-                if (result.newImageBase64 && result.newImageMimeType) {
-                    const { newImageBase64, newImageMimeType } = result;
+                const mentionResolved = resolveImageHref(result);
+                if (mentionResolved) {
                     const img = new Image();
+                    img.crossOrigin = 'anonymous';
                     img.onload = () => {
                         if (!svgRef.current) return;
                         const svgBounds = svgRef.current.getBoundingClientRect();
@@ -1044,7 +1054,7 @@ export function useGeneration(params: UseGenerationParams) {
                         const newImage: ImageElement = {
                             id: generateId(), type: 'image', x, y, name: imageOutputName,
                             width: img.width, height: img.height,
-                            href: `data:${newImageMimeType};base64,${newImageBase64}`, mimeType: newImageMimeType,
+                            href: mentionResolved.href, mimeType: mentionResolved.mimeType,
                         };
                         commitAction(prev => [...prev, newImage]);
                         setSelectedElementIds([newImage.id]);
@@ -1058,7 +1068,7 @@ export function useGeneration(params: UseGenerationParams) {
                         });
                     };
                     img.onerror = () => setError('Failed to load the generated image.');
-                    img.src = `data:${newImageMimeType};base64,${newImageBase64}`;
+                    img.src = mentionResolved.href;
                 } else {
                     setError(result.textResponse || 'Generation failed to produce an image.');
                 }
@@ -1069,7 +1079,7 @@ export function useGeneration(params: UseGenerationParams) {
                     setError('当前图片模型不支持参考图生成。请切换到支持参考图编辑的 Gemini、GPT Image 或 OpenRouter 图像模型。');
                     return;
                 }
-                const result = baseRefs.length > 0
+                const result = await persistGenResult(baseRefs.length > 0
                     ? await editImageWithProvider(
                         baseRefs,
                         effectivePrompt,
@@ -1080,7 +1090,7 @@ export function useGeneration(params: UseGenerationParams) {
                         effectivePrompt,
                         resolvedImageModel,
                         resolvedImageKey,
-                    );
+                    ));
 
                 const resolved = resolveImageHref(result);
                 if (resolved) {
@@ -1172,21 +1182,22 @@ export function useGeneration(params: UseGenerationParams) {
                     rawPrompt + (i > 0 ? ` (variation ${i + 1})` : ''),
                     batchResolved.model,
                     batchResolved.key,
-                ).catch(() => null)
+                ).then(r => persistGenResult(r)).catch(() => null)
             );
             const results = await Promise.all(tasks);
 
             const images: { href: string; mimeType: string; width: number; height: number }[] = [];
             for (const res of results) {
-                if (res && res.newImageBase64 && res.newImageMimeType) {
-                    const href = `data:${res.newImageMimeType};base64,${res.newImageBase64}`;
+                const batchResolved2 = res ? resolveImageHref(res) : null;
+                if (batchResolved2) {
+                    const href = batchResolved2.href;
                     const dim = await new Promise<{ w: number; h: number }>((resolve) => {
                         const img = new Image();
                         img.onload = () => resolve({ w: img.width, h: img.height });
                         img.onerror = () => resolve({ w: 512, h: 512 });
                         img.src = href;
                     });
-                    images.push({ href, mimeType: res.newImageMimeType, width: dim.w, height: dim.h });
+                    images.push({ href, mimeType: batchResolved2.mimeType, width: dim.w, height: dim.h });
                 }
             }
 

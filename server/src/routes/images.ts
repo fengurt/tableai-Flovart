@@ -61,6 +61,27 @@ imagesRouter.post('/persist', async (c) => {
   return c.json({ imageUrl, filename });
 });
 
+// POST /api/images/upload — 接收 base64 图片数据并持久化
+imagesRouter.post('/upload', async (c) => {
+  const body = await c.req.json<{ data: string; mimeType?: string }>();
+  if (!body.data) return c.json({ error: 'MISSING_DATA' }, 400);
+
+  const match = body.data.match(/^data:image\/(\w+);base64,(.+)$/s);
+  const raw = match ? match[2] : body.data;
+  const mime = match ? match[1] : (body.mimeType?.split('/')[1] || 'png');
+  const ext = mime === 'jpeg' ? 'jpg' : (mime === 'webp' ? 'webp' : 'png');
+
+  const buffer = Buffer.from(raw, 'base64');
+  if (buffer.length > 20 * 1024 * 1024) return c.json({ error: 'TOO_LARGE' }, 413);
+
+  const id = crypto.randomBytes(16).toString('hex');
+  const filename = `${id}.${ext}`;
+  fs.writeFileSync(path.join(IMAGES_DIR, filename), buffer);
+
+  const origin = c.req.header('Origin') || c.req.header('Referer')?.replace(/\/+$/, '') || '';
+  return c.json({ imageUrl: `${origin}/api/images/${filename}`, filename });
+});
+
 // GET /api/images/:filename — 公开访问已保存的图片
 imagesPublicRouter.get('/:filename', async (c) => {
   const filename = c.req.param('filename');

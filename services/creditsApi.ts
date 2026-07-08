@@ -119,3 +119,18 @@ export const historyApi = {
     await authedFetch(`/api/history/${id}`, { method: 'DELETE' });
   },
 };
+
+export async function uploadImageToServer(base64: string, mimeType: string): Promise<string | null> {
+  try {
+    const dataUrl = base64.startsWith('data:') ? base64 : `data:${mimeType};base64,${base64}`;
+    const res = await authedFetch('/api/images/upload', {
+      method: 'POST',
+      body: JSON.stringify({ data: dataUrl, mimeType }),
+    });
+    if (!res.ok) return null;
+    const { imageUrl } = await res.json() as { imageUrl: string };
+    return imageUrl;
+  } catch {
+    return null;
+  }
+}
