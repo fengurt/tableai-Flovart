@@ -7,6 +7,7 @@ COPY . .
 ARG VITE_LOGTO_ENABLED=true
 ARG VITE_LOGTO_ENDPOINT=https://auth.apuch.cn
 ARG VITE_LOGTO_APP_ID=ixchnmj3k4w4d2c6pe4nu
+ARG VITE_FLOVART_LLM_CONFIG
 RUN pnpm build
 
 FROM nginx:1.27-alpine

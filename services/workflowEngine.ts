@@ -361,22 +361,7 @@ async function executeImageGen(
     return { image: refImage };
   }
   const provider = (node.config?.provider as AIProvider) || 'google';
-  const model = node.config?.model || 'liblib-kontext';
-
-  if (/^liblib/i.test(model)) {
-    const { generateImageWithLiblib } = await import('../services/liblibClient');
-    const imageList = refImage ? [refImage.href] : undefined;
-    const result = await generateImageWithLiblib(prompt, imageList);
-    if (result?.newImageBase64 && result?.newImageMimeType) {
-      return {
-        image: imageValue(
-          `data:${result.newImageMimeType};base64,${result.newImageBase64}`,
-          result.newImageMimeType,
-        ),
-      };
-    }
-    return { text: result?.textResponse || '生图未返回结果' };
-  }
+  const model = node.config?.model || 'gemini-3-pro-image';
 
   const key = resolveNodeApiKey(ctx.apiKeys, node.config, provider);
   if (!key) {

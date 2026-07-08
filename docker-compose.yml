@@ -35,6 +35,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_FLOVART_LLM_CONFIG: ${VITE_FLOVART_LLM_CONFIG}
     container_name: flovart-web
     ports:
       - "127.0.0.1:3217:80"

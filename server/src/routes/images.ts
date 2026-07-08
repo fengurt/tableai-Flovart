@@ -5,12 +5,16 @@
  * [PROTOCOL]: update on storage strategy changes
  */
 import crypto from 'node:crypto';
+import dns from 'node:dns/promises';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Hono } from 'hono';
 
 const IMAGES_DIR = '/data/flovart-images';
 fs.mkdirSync(IMAGES_DIR, { recursive: true });
+
+const isPrivateIP = (ip: string): boolean =>
+  /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|0\.|::1|fc|fd|fe80)/.test(ip);
 
 export const imagesRouter = new Hono();
 export const imagesPublicRouter = new Hono();
@@ -20,17 +24,26 @@ imagesRouter.post('/persist', async (c) => {
   const body = await c.req.json<{ url: string }>();
   if (!body.url) return c.json({ error: 'MISSING_URL' }, 400);
 
-  const ALLOWED_HOSTS = ['liblibai-online.liblib.cloud', 'liblibai-tmp-image.liblib.cloud'];
+  let parsed: URL;
   try {
-    const parsed = new URL(body.url);
-    if (parsed.protocol !== 'https:' || !ALLOWED_HOSTS.includes(parsed.hostname)) {
+    parsed = new URL(body.url);
+    if (parsed.protocol !== 'https:') {
       return c.json({ error: 'URL_NOT_ALLOWED' }, 400);
     }
   } catch {
     return c.json({ error: 'INVALID_URL' }, 400);
   }
 
-  const res = await fetch(body.url);
+  // SSRF: DNS 解析后拦截私有/回环/元数据地址
+  try {
+    const { address } = await dns.lookup(parsed.hostname);
+    if (isPrivateIP(address)) return c.json({ error: 'URL_NOT_ALLOWED' }, 400);
+  } catch {
+    return c.json({ error: 'DNS_RESOLVE_FAILED' }, 400);
+  }
+
+  const res = await fetch(body.url, { redirect: 'manual' });
+  if (res.status >= 300 && res.status < 400) return c.json({ error: 'REDIRECT_NOT_ALLOWED' }, 400);
   if (!res.ok) return c.json({ error: 'DOWNLOAD_FAILED' }, 502);
 
   const contentType = res.headers.get('content-type') || 'image/png';

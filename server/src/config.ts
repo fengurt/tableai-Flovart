@@ -10,8 +10,6 @@ export const config = {
   logtoEndpoint: required('LOGTO_ENDPOINT'),
   logtoAudience: process.env.LOGTO_AUDIENCE || '',
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:11451',
-  liblibAccessKey: required('LIBLIB_ACCESS_KEY'),
-  liblibSecretKey: required('LIBLIB_SECRET_KEY'),
   fenpayBaseUrl: required('FENPAY_BASE_URL'),
   fenpayAppId: required('FENPAY_APP_ID'),
   fenpayAppSecret: required('FENPAY_APP_SECRET'),
