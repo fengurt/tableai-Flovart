@@ -98,7 +98,7 @@ export function getGeminiRestBaseUrl(): string {
  * @param explicitKey - 可选的显式 API Key
  */
 function getClient(capability: "text" | "image" | "video" = "text", explicitKey?: string) {
-  const base = runtimeConfig.baseUrl?.replace(/\/+$/, '');
+  const base = runtimeConfig.baseUrl?.replace(/\/+$/, '').replace(/\/v1beta$/i, '');
   return new GoogleGenAI({
     apiKey: getApiKey(capability, explicitKey),
     ...(base ? { httpOptions: { baseUrl: base } } : {}),
