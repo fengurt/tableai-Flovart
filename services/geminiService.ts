@@ -13,7 +13,7 @@
  * 
  * 【使用的 AI 模型】
  * - gemini-3-flash-preview: 文本理解与提示词润色
- * - gemini-3.1-flash-image-preview: 图像编辑和生成
+ * - gemini-3.1-flash-lite-image: 图像编辑和生成
  * - imagen-4.0-generate-001: 文本直接生成图像
  * - veo-3.1-generate-preview: 视频生成
  * 
@@ -306,7 +306,7 @@ export async function editImage(
     const ai = getClient("image", apiKey);
     // 步骤5：调用 Gemini API
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: runtimeConfig.imageModel || 'gemini-3.1-flash-image-preview',  // 使用 Gemini 3.1 Flash 图像模型
+      model: runtimeConfig.imageModel || 'gemini-3.1-flash-lite-image',  // 使用 Gemini 3.1 Flash 图像模型
       contents: {
         parts: parts,  // 传入组装好的内容
       },

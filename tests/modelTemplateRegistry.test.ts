@@ -16,7 +16,7 @@ describe('modelTemplateRegistry', () => {
         expect.objectContaining({
           provider: 'google',
           capability: 'image',
-          model: 'gemini-3.1-flash-image-preview',
+          model: 'gemini-3.1-flash-lite-image',
         }),
         expect.objectContaining({
           provider: 'openai',

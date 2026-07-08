@@ -104,7 +104,7 @@ describe('Block2: Provider routing (已有)', () => {
 
     it('inferCapabilityFromModel 正确识别能力', async () => {
         const { inferCapabilityFromModel } = await import('../services/aiGateway');
-        expect(inferCapabilityFromModel('gemini-3.1-flash-image-preview')).toBe('image');
+        expect(inferCapabilityFromModel('gemini-3.1-flash-lite-image')).toBe('image');
         expect(inferCapabilityFromModel('gemini-3-flash-preview')).toBe('text');
         expect(inferCapabilityFromModel('veo-3.1-generate-preview')).toBe('video');
         expect(inferCapabilityFromModel('gpt-image-1')).toBe('image');

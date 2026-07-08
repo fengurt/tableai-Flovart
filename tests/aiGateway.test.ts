@@ -48,7 +48,7 @@ describe('inferProviderFromModel', () => {
     it('推断模型能力（含新模型）', () => {
         expect(inferCapabilityFromModel('gemini-2.5-pro')).toBe('text');
         expect(inferCapabilityFromModel('gemini-3-flash-preview')).toBe('text');
-        expect(inferCapabilityFromModel('gemini-3.1-flash-image-preview')).toBe('image');
+        expect(inferCapabilityFromModel('gemini-3.1-flash-lite-image')).toBe('image');
         expect(inferCapabilityFromModel('gemini-3-pro-image-preview')).toBe('image');
         expect(inferCapabilityFromModel('imagen-4.0-generate-001')).toBe('image');
         expect(inferCapabilityFromModel('veo-3.1-generate-preview')).toBe('video');
@@ -58,7 +58,7 @@ describe('inferProviderFromModel', () => {
 
     it('识别 Google 图片模型类型', () => {
         expect(isGoogleImageEditModel('gemini-2.5-flash-image')).toBe(true);
-        expect(isGoogleImageEditModel('gemini-3.1-flash-image-preview')).toBe(true);
+        expect(isGoogleImageEditModel('gemini-3.1-flash-lite-image')).toBe(true);
         expect(isGoogleImageEditModel('imagen-4.0-generate-001')).toBe(false);
         expect(isGoogleTextToImageModel('imagen-4.0-generate-001')).toBe(true);
         expect(isGoogleTextToImageModel('gemini-2.5-flash-image')).toBe(false);
@@ -69,7 +69,7 @@ describe('inferProviderFromModel', () => {
         expect(inferCapabilityFromModel('openai/gpt-image-1')).toBe('image');
         expect(inferCapabilityFromModel('google/gemini-3-flash-preview')).toBe('text');
         expect(inferCapabilityFromModel('google/imagen-4.0-generate-001')).toBe('image');
-        expect(supportsReferenceImageEditing('gemini-3.1-flash-image-preview')).toBe(true);
+        expect(supportsReferenceImageEditing('gemini-3.1-flash-lite-image')).toBe(true);
         expect(supportsReferenceImageEditing('gpt-image-1')).toBe(true);
         expect(supportsReferenceImageEditing('openai/gpt-image-1')).toBe(true);
         expect(supportsReferenceImageEditing('dall-e-3')).toBe(false);

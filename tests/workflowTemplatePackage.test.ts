@@ -27,7 +27,7 @@ describe('workflow template packages', () => {
         y: 0,
         config: {
           provider: 'google',
-          model: 'gemini-3.1-flash-image-preview',
+          model: 'gemini-3.1-flash-lite-image',
           apiKeyRef: 'local-google-key',
           pinnedOutputs: {
             image: { kind: 'image', href: 'data:image/png;base64,secret', mimeType: 'image/png' },
@@ -86,14 +86,14 @@ describe('workflow template packages', () => {
     ]);
     expect(pack.requirements.providers).toEqual(['google']);
     expect(pack.requirements.models).toEqual([
-      'gemini-3.1-flash-image-preview',
+      'gemini-3.1-flash-lite-image',
       'veo-3.1-generate-preview',
     ]);
 
     const imageConfig = pack.workflow.nodes.find((node) => node.id === 'image_1')?.config;
     expect(imageConfig).toMatchObject({
       provider: 'google',
-      model: 'gemini-3.1-flash-image-preview',
+      model: 'gemini-3.1-flash-lite-image',
     });
     expect(imageConfig).not.toHaveProperty('apiKeyRef');
     expect(imageConfig).not.toHaveProperty('pinnedOutputs');
@@ -186,7 +186,7 @@ describe('workflow template packages', () => {
           y: 0,
           config: {
             provider: 'google',
-            model: 'gemini-3.1-flash-image-preview',
+            model: 'gemini-3.1-flash-lite-image',
             apiKeyRef: 'local-key-before-export',
           },
         },
@@ -214,7 +214,7 @@ describe('workflow template packages', () => {
 
     expect(hydrated.nodes.find((node) => node.id === 'image_1')?.config).toMatchObject({
       provider: 'google',
-      model: 'gemini-3.1-flash-image-preview',
+      model: 'gemini-3.1-flash-lite-image',
       apiKeyRef: 'my-google-image-key',
     });
     expect(hydrated.nodes.find((node) => node.id === 'video_1')?.config).toMatchObject({

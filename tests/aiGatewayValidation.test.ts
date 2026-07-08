@@ -45,7 +45,7 @@ describe('aiGateway - validateApiKey', () => {
     it('Google provider 调用 models.list 接口验证', async () => {
         globalThis.fetch = vi.fn().mockResolvedValue(mockJsonResponse({
             models: [{
-                name: 'models/gemini-3.1-flash-image-preview',
+                name: 'models/gemini-3.1-flash-lite-image',
                 displayName: 'Gemini 3.1 Flash Image Preview',
                 supportedGenerationMethods: ['generateImages'],
             }],
@@ -82,7 +82,7 @@ describe('aiGateway - validateApiKey', () => {
 
     it('custom 裸域名会自动补全到 /v1 并返回 effectiveBaseUrl', async () => {
         globalThis.fetch = vi.fn().mockResolvedValue(mockJsonResponse({
-            data: [{ id: 'gemini-3.1-flash-image-preview-512px' }],
+            data: [{ id: 'gemini-3.1-flash-lite-image-512px' }],
         }));
 
         const result = await validateApiKey('custom', 'sk-test-key', 'https://ai.t8star.cn');
@@ -168,7 +168,7 @@ describe('aiGateway - generateImageWithProvider', () => {
             data: [{ b64_json: 'ZmFrZQ==' }],
         }));
 
-        const result = await generateImageWithProvider('test prompt', 'gemini-3.1-flash-image-preview', {
+        const result = await generateImageWithProvider('test prompt', 'gemini-3.1-flash-lite-image', {
             id: '3',
             provider: 'custom',
             capabilities: ['image'],

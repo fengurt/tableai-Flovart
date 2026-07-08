@@ -139,9 +139,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -188,9 +188,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -229,9 +229,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -275,9 +275,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -324,9 +324,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -356,9 +356,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -391,9 +391,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -425,9 +425,9 @@ describe('NodeWorkflowPanel smoke', () => {
         generationMode="image"
         setGenerationMode={() => undefined}
         language="zho"
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -455,9 +455,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -490,9 +490,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -526,9 +526,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -557,9 +557,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -594,9 +594,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -859,9 +859,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}
@@ -894,9 +894,9 @@ describe('NodeWorkflowPanel smoke', () => {
         setPrompt={() => undefined}
         generationMode="image"
         setGenerationMode={() => undefined}
-        selectedImageModel="gemini-3.1-flash-image-preview"
+        selectedImageModel="gemini-3.1-flash-lite-image"
         selectedVideoModel="veo-3.1-generate-preview"
-        imageModelOptions={['gemini-3.1-flash-image-preview']}
+        imageModelOptions={['gemini-3.1-flash-lite-image']}
         videoModelOptions={['veo-3.1-generate-preview']}
         attachments={[]}
         canvasImages={[]}

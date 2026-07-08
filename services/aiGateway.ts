@@ -37,7 +37,7 @@ export interface ModelParamSchema {
     defaultAspectRatio?: VideoAspectRatio;
 }
 
-export const SUPPORTED_IMAGE_MODELS = ['gemini-3-pro-image', 'gemini-3.1-flash-image-preview', 'gpt-image-2'] as const;
+export const SUPPORTED_IMAGE_MODELS = ['gemini-3-pro-image', 'gemini-3.1-flash-lite-image', 'gpt-image-2'] as const;
 export const DEFAULT_IMAGE_MODEL = 'gemini-3-pro-image';
 export const DISABLED_VIDEO_MODEL = '';
 const SUPPORTED_IMAGE_MODEL_SET = new Set<string>(SUPPORTED_IMAGE_MODELS);
@@ -45,7 +45,7 @@ const SUPPORTED_IMAGE_MODEL_SET = new Set<string>(SUPPORTED_IMAGE_MODELS);
 export const DEFAULT_PROVIDER_MODELS: Partial<Record<AIProvider, ProviderModelMap>> = {
     google: {
         text: ['gemini-3-flash-preview', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-2.5-pro', 'gemini-2.5-flash'],
-        image: ['gemini-3.1-flash-image-preview'],
+        image: ['gemini-3.1-flash-lite-image'],
         video: [],
     },
     openai: {
